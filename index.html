@@ -4,56 +4,19 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Мудрец Пустоты — горькая правда за 1 USDT</title>
-
-<!-- SEO -->
-<meta name="description" content="Пожертвуй мудрецу — и он скажет тебе то, что ты не хочешь слышать. Пиксельный оракул принимает крипту и раздаёт горькие истины.">
-<meta name="keywords" content="мудрец, мудрость, usdt, крипта, оракул, горькая правда, mudrets, пожертвование">
-<meta name="robots" content="index, follow">
-<link rel="canonical" href="https://mudrets.online">
-
-<!-- Open Graph (Telegram, VK, Facebook) -->
-<meta property="og:type" content="website">
-<meta property="og:url" content="https://mudrets.online">
+<meta name="description" content="Пожертвуй мудрецу — и он скажет тебе то, что ты не хочешь слышать.">
 <meta property="og:title" content="Мудрец Пустоты — горькая правда за 1 USDT">
-<meta property="og:description" content="Пожертвуй мудрецу — получи истину в лицо. Древний пиксельный мудрец не врёт и не жалеет.">
+<meta property="og:description" content="Пожертвуй мудрецу — получи истину в лицо.">
 <meta property="og:image" content="https://mudrets.online/og.png">
-<meta property="og:image:width" content="1200">
-<meta property="og:image:height" content="630">
-<meta property="og:locale" content="ru_RU">
-<meta property="og:site_name" content="Мудрец Пустоты">
-
-<!-- Twitter Card -->
+<meta property="og:url" content="https://mudrets.online">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:url" content="https://mudrets.online">
-<meta name="twitter:title" content="Мудрец Пустоты — горькая правда за 1 USDT">
-<meta name="twitter:description" content="Пожертвуй мудрецу — получи истину в лицо. Древний пиксельный мудрец не врёт и не жалеет.">
 <meta name="twitter:image" content="https://mudrets.online/og.png">
-
-<!-- Favicon -->
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' fill='%230a0a0a'/><text y='.9em' font-size='90'>🧙</text></svg>">
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323:wght@400&display=swap');
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  body {
-    background: #0a0a0a;
-    color: #e8e0c8;
-    font-family: 'Press Start 2P', monospace;
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 40px 20px;
-    position: relative;
-    overflow-x: hidden;
-  }
-  body::before {
-    content: '';
-    position: fixed;
-    inset: 0;
-    background: repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.15) 2px,rgba(0,0,0,0.15) 4px);
-    pointer-events: none;
-    z-index: 100;
-  }
+  body { background: #0a0a0a; color: #e8e0c8; font-family: 'Press Start 2P', monospace; min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 40px 20px; position: relative; overflow-x: hidden; }
+  body::before { content: ''; position: fixed; inset: 0; background: repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.15) 2px,rgba(0,0,0,0.15) 4px); pointer-events: none; z-index: 100; }
   .stars { position: fixed; inset: 0; pointer-events: none; z-index: 0; }
   .lang-switcher { display: flex; margin-bottom: 32px; z-index: 1; border: 2px solid #3a3020; }
   .lang-btn { background: #0d0d0d; color: #5a5040; border: none; font-family: 'Press Start 2P', monospace; font-size: 9px; padding: 10px 20px; cursor: pointer; letter-spacing: 1px; border-right: 2px solid #3a3020; transition: background 0.1s, color 0.1s; }
@@ -69,6 +32,16 @@
   .speech-bubble::before { content:''; position:absolute; left:-18px; top:20px; width:0; height:0; border-top:8px solid transparent; border-bottom:8px solid transparent; border-right:15px solid #c8a84b; }
   .speech-bubble::after { content:''; position:absolute; left:-12px; top:20px; width:0; height:0; border-top:8px solid transparent; border-bottom:8px solid transparent; border-right:15px solid #1a1a1a; }
   .card { background:#111; border:3px solid #3a3020; padding:28px; width:100%; max-width:520px; z-index:1; box-shadow:6px 6px 0 #2a2010; }
+
+  /* Anger scale */
+  .anger-section { margin-bottom: 24px; }
+  .anger-label { font-size: 7px; color: #7a7060; letter-spacing: 1px; margin-bottom: 10px; }
+  .anger-eye-container { display: flex; align-items: center; gap: 12px; }
+  canvas#angerEye { image-rendering: pixelated; }
+  .anger-bar-wrap { flex: 1; background: #0d0d0d; border: 2px solid #2a2010; height: 20px; position: relative; overflow: hidden; }
+  .anger-bar-fill { height: 100%; background: #c8a84b; width: 0%; transition: width 0.8s ease, background 0.8s ease; }
+  .anger-icons { font-size: 14px; display: flex; justify-content: space-between; margin-top: 4px; }
+
   .wallet-label { font-size:8px; color:#7a7060; margin-bottom:10px; letter-spacing:1px; }
   .wallet-address { font-family:'VT323',monospace; font-size:17px; color:#c8a84b; word-break:break-all; background:#0d0d0d; border:2px solid #2a2010; padding:10px 12px; margin-bottom:6px; cursor:pointer; transition: border-color 0.1s; }
   .wallet-address:hover { border-color:#c8a84b; }
@@ -80,26 +53,31 @@
   .tx-input::placeholder { color:#3a3020; }
   .amount-note { font-family:'VT323',monospace; font-size:15px; color:#5a5040; margin-bottom:20px; }
   .pixel-coin { display:inline-block; width:12px; height:12px; background:#c8a84b; box-shadow:2px 0 #8a7030,0 2px #8a7030; margin-right:4px; vertical-align:middle; }
-  .btn { width:100%; background:#c8a84b; color:#0a0a0a; border:none; font-family:'Press Start 2P',monospace; font-size:9px; padding:14px; cursor:pointer; letter-spacing:1px; box-shadow:4px 4px 0 #8a7030; transition: transform 0.08s, box-shadow 0.08s; }
+  .btn { width:100%; background:#c8a84b; color:#0a0a0a; border:none; font-family:'Press Start 2P',monospace; font-size:9px; padding:14px; cursor:pointer; letter-spacing:1px; box-shadow:4px 4px 0 #8a7030; transition: transform 0.08s, box-shadow 0.08s; margin-bottom: 12px; }
   .btn:hover { transform:translate(-1px,-1px); box-shadow:5px 5px 0 #8a7030; }
   .btn:active { transform:translate(2px,2px); box-shadow:2px 2px 0 #8a7030; }
   .btn:disabled { background:#3a3020; color:#6a6050; box-shadow:none; cursor:default; transform:none; }
-  .status { font-family:'VT323',monospace; font-size:16px; margin-top:16px; min-height:24px; text-align:center; }
+  .btn-free { background: #1a1a1a; color: #7a7060; border: 2px solid #3a3020; box-shadow: none; font-size: 8px; }
+  .btn-free:hover { background: #222; color: #a0906a; border-color: #5a5040; transform: none; box-shadow: none; }
+  .status { font-family:'VT323',monospace; font-size:16px; margin-top:8px; min-height:24px; text-align:center; }
   .status.checking { color:#7a7060; }
   .status.error { color:#c84b4b; }
   .status.success { color:#4bc8a8; }
   .wisdom-box { margin-top:20px; background:#0d0d0d; border:3px solid #c8a84b; padding:18px; font-family:'VT323',monospace; font-size:18px; color:#e8c878; line-height:1.5; display:none; text-align:left; box-shadow:4px 4px 0 #c8a84b; }
+  .wisdom-box.free-box { border-color: #5a3a3a; box-shadow: 4px 4px 0 #5a3a3a; color: #c87878; }
   .wisdom-box.visible { display:block; }
-  .wisdom-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; }
+  .wisdom-header { margin-bottom:10px; }
   .wisdom-label { font-size:11px; color:#c8a84b; letter-spacing:1px; }
+  .wisdom-label.free-label { color: #c84b4b; }
   .speak-btn { background:#c8a84b; border:none; color:#0a0a0a; font-family:'Press Start 2P',monospace; font-size:9px; padding:14px; cursor:pointer; width:100%; margin-top:12px; box-shadow:4px 4px 0 #8a7030; transition: transform 0.08s, box-shadow 0.08s; letter-spacing:1px; }
   .speak-btn:hover { transform:translate(-1px,-1px); box-shadow:5px 5px 0 #8a7030; }
   .speak-btn:active { transform:translate(2px,2px); box-shadow:2px 2px 0 #8a7030; }
+  .tg-link { display: block; text-align: center; font-family:'VT323',monospace; font-size:16px; color:#5a7a5a; margin-top: 16px; text-decoration: none; }
+  .tg-link:hover { color: #7ab07a; }
   .footer { margin-top:40px; font-family:'VT323',monospace; font-size:14px; color:#3a3020; text-align:center; z-index:1; }
 </style>
 </head>
 <body>
-
 <canvas class="stars" id="starfield"></canvas>
 
 <div class="lang-switcher">
@@ -116,6 +94,23 @@
 </div>
 
 <div class="card">
+
+  <!-- Anger Scale -->
+  <div class="anger-section">
+    <div class="anger-label" id="t-angerLabel">ГНЕВ МУДРЕЦА</div>
+    <div class="anger-eye-container">
+      <canvas id="angerEye" width="40" height="40"></canvas>
+      <div style="flex:1">
+        <div class="anger-bar-wrap">
+          <div class="anger-bar-fill" id="angerFill"></div>
+        </div>
+        <div class="anger-icons">
+          <span>😤</span><span>😠</span><span>🔥</span><span>💀</span><span>☠️</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <div class="wallet-label" id="t-walletLabel">USDT TRC-20 · КОШЕЛЁК МУДРЕЦА</div>
   <div class="wallet-address" onclick="copyAddr()">TNnCZrgSQwEgWKViC1eci2MxCMdsoqTWVu</div>
   <div class="copy-hint" id="copyHint"></div>
@@ -124,14 +119,16 @@
   <input class="tx-input" id="txid" type="text" spellcheck="false">
   <div class="amount-note"><span class="pixel-coin"></span><span id="t-amountNote"></span></div>
   <button class="btn" id="verifyBtn" onclick="verify()"></button>
+  <button class="btn btn-free" id="freeBtn" onclick="getFreeWisdom()"></button>
   <div class="status" id="status"></div>
   <div class="wisdom-box" id="wisdomBox">
     <div class="wisdom-header">
       <span class="wisdom-label" id="t-wisdomLabel"></span>
     </div>
-    <button class="speak-btn" id="speakBtn" onclick="speakWisdom()" style="display:none">▶ ОЗВУЧИТЬ</button>
     <div id="wisdomText"></div>
+    <button class="speak-btn" id="speakBtn" onclick="speakWisdom()" style="display:none">▶ ОЗВУЧИТЬ</button>
   </div>
+  <a class="tg-link" href="https://t.me/mudrets_on" target="_blank" id="t-tgLink">📢 Канал мудреца в Telegram</a>
 </div>
 
 <div class="footer" id="t-footer"></div>
@@ -141,84 +138,51 @@ const BACKEND = 'https://sage-production-6a45.up.railway.app';
 const WALLET = 'TNnCZrgSQwEgWKViC1eci2MxCMdsoqTWVu';
 let lang = 'ru';
 let currentWisdom = '';
+let currentAudio = null;
+let currentAngerLevel = 1;
 
 const T = {
   ru: {
-    title: 'МУДРЕЦ ПУСТОТЫ',
-    subtitle: 'Пожертвуй — и узнай то, что лучше бы не знал',
+    title: 'МУДРЕЦ ПУСТОТЫ', subtitle: 'Пожертвуй — и узнай то, что лучше бы не знал',
     walletLabel: 'USDT TRC-20 · КОШЕЛЁК МУДРЕЦА',
-    copyHint: '[ нажми чтобы скопировать ]',
-    copiedHint: '[ скопировано! ]',
-    fieldLabel: 'TXID ТРАНЗАКЦИИ (МИНИМУМ 1 USDT)',
-    placeholder: 'вставь хэш транзакции...',
+    copyHint: '[ нажми чтобы скопировать ]', copiedHint: '[ скопировано! ]',
+    fieldLabel: 'TXID ТРАНЗАКЦИИ (МИНИМУМ 1 USDT)', placeholder: 'вставь хэш транзакции...',
     amountNote: 'мин. 1 USDT · TRON сеть · TRC-20',
-    btnText: '▶ ПРОБУДИТЬ МУДРЕЦА',
-    checking: '⏳ Мудрец смотрит в блокчейн...',
-    noTxid: '⚠ Вставь TXID транзакции',
-    usedTx: '⚠ Эта мудрость уже была куплена',
-    connErr: '⚠ Ошибка соединения. Попробуй позже.',
-    errors: {
-      not_found: 'Транзакция не найдена',
-      not_confirmed: 'Транзакция не подтверждена',
-      no_usdt: 'USDT не найден в транзакции',
-      not_usdt: 'Это не USDT TRC-20',
-      wrong_address: 'Адрес получателя не совпадает',
-      too_little: 'Слишком мало (мин. 1 USDT)',
-      already_used: 'Мудрость уже куплена',
-      ai_failed: 'Мудрец молчит...',
-      server_error: 'Ошибка сервера'
-    },
-    received: (a) => `✓ ${a} USDT получено`,
-    wisdomLabel: '☽ МУДРОСТЬ ПОЛУЧЕНА ☾',
-    speakBtn: '▶ ОЗВУЧИТЬ',
-    bubbleIdle: 'Брось монету в пустоту...',
-    bubbleReading: 'Читаю блокчейн...',
+    btnText: '▶ ПРОБУДИТЬ МУДРЕЦА', freeBtn: '◈ БЕСПЛАТНАЯ МУДРОСТЬ (1 В СУТКИ)',
+    angerLabel: 'ГНЕВ МУДРЕЦА',
+    checking: '⏳ Мудрец смотрит в блокчейн...', freeChecking: '⏳ Мудрец смотрит на тебя с презрением...',
+    noTxid: '⚠ Вставь TXID транзакции', usedTx: '⚠ Эта мудрость уже куплена',
+    connErr: '⚠ Ошибка соединения.', received: a => `✓ ${a} USDT получено`,
+    wisdomLabel: '☽ МУДРОСТЬ ПОЛУЧЕНА ☾', freeWisdomLabel: '☽ НИЩЕБРОДСКАЯ МУДРОСТЬ ☾',
+    speakBtn: '▶ ОЗВУЧИТЬ', bubbleIdle: 'Брось монету в пустоту...',
     footer: 'Мудрость не возвращают. Деньги тоже.',
+    tgLink: '📢 Канал мудреца в Telegram',
+    errors: { not_found:'Транзакция не найдена', not_confirmed:'Не подтверждена', no_usdt:'USDT не найден', not_usdt:'Это не USDT TRC-20', wrong_address:'Неверный адрес', too_little:'Слишком мало (мин. 1 USDT)', already_used:'Уже куплена', ai_failed:'Мудрец молчит...', server_error:'Ошибка сервера', daily_limit:'Ты уже получил бесплатную мудрость сегодня. Возвращайся завтра или заплати.' },
     voiceLang: 'ru-RU'
   },
   en: {
-    title: 'THE VOID SAGE',
-    subtitle: "Donate — and learn what you'd rather not know",
+    title: 'THE VOID SAGE', subtitle: "Donate — and learn what you'd rather not know",
     walletLabel: "USDT TRC-20 · SAGE'S WALLET",
-    copyHint: '[ click to copy ]',
-    copiedHint: '[ copied! ]',
-    fieldLabel: 'TRANSACTION TXID (MINIMUM 1 USDT)',
-    placeholder: 'paste transaction hash...',
+    copyHint: '[ click to copy ]', copiedHint: '[ copied! ]',
+    fieldLabel: 'TRANSACTION TXID (MINIMUM 1 USDT)', placeholder: 'paste transaction hash...',
     amountNote: 'min. 1 USDT · TRON network · TRC-20',
-    btnText: '▶ AWAKEN THE SAGE',
-    checking: '⏳ The sage gazes into the blockchain...',
-    noTxid: '⚠ Paste your TXID first',
-    usedTx: '⚠ This wisdom has already been purchased',
-    connErr: '⚠ Connection error. Try again later.',
-    errors: {
-      not_found: 'Transaction not found',
-      not_confirmed: 'Transaction not confirmed',
-      no_usdt: 'No USDT found in transaction',
-      not_usdt: 'This is not USDT TRC-20',
-      wrong_address: 'Wrong recipient address',
-      too_little: 'Too little (min. 1 USDT)',
-      already_used: 'Wisdom already purchased',
-      ai_failed: 'The sage is silent...',
-      server_error: 'Server error'
-    },
-    received: (a) => `✓ ${a} USDT received`,
-    wisdomLabel: '☽ WISDOM GRANTED ☾',
-    speakBtn: '▶ SPEAK',
-    bubbleIdle: 'Cast a coin into the void...',
-    bubbleReading: 'Reading the blockchain...',
+    btnText: '▶ AWAKEN THE SAGE', freeBtn: '◈ FREE WISDOM (1 PER DAY)',
+    angerLabel: "SAGE'S WRATH",
+    checking: '⏳ The sage gazes into the blockchain...', freeChecking: '⏳ The sage eyes you with contempt...',
+    noTxid: '⚠ Paste your TXID first', usedTx: '⚠ This wisdom already purchased',
+    connErr: '⚠ Connection error.', received: a => `✓ ${a} USDT received`,
+    wisdomLabel: '☽ WISDOM GRANTED ☾', freeWisdomLabel: '☽ CHEAPSKATE WISDOM ☾',
+    speakBtn: '▶ SPEAK', bubbleIdle: 'Cast a coin into the void...',
     footer: 'Wisdom is non-refundable. So is your money.',
+    tgLink: '📢 Sage\'s Telegram Channel',
+    errors: { not_found:'Transaction not found', not_confirmed:'Not confirmed', no_usdt:'No USDT found', not_usdt:'Not USDT TRC-20', wrong_address:'Wrong address', too_little:'Too little (min. 1 USDT)', already_used:'Already purchased', ai_failed:'The sage is silent...', server_error:'Server error', daily_limit:'You already got your free wisdom today. Come back tomorrow or pay.' },
     voiceLang: 'en-US'
   }
 };
 
 function setLang(l) {
   lang = l;
-  document.querySelectorAll('.lang-btn').forEach(b => {
-    b.classList.toggle('active',
-      (l === 'ru' && b.textContent === 'РУС') ||
-      (l === 'en' && b.textContent === 'ENG')
-    );
-  });
+  document.querySelectorAll('.lang-btn').forEach(b => b.classList.toggle('active', (l==='ru'&&b.textContent==='РУС')||(l==='en'&&b.textContent==='ENG')));
   const t = T[lang];
   document.getElementById('t-title').textContent = t.title;
   document.getElementById('t-subtitle').textContent = t.subtitle;
@@ -228,9 +192,10 @@ function setLang(l) {
   document.getElementById('txid').placeholder = t.placeholder;
   document.getElementById('t-amountNote').textContent = t.amountNote;
   document.getElementById('verifyBtn').textContent = t.btnText;
+  document.getElementById('freeBtn').textContent = t.freeBtn;
+  document.getElementById('t-angerLabel').textContent = t.angerLabel;
   document.getElementById('t-footer').textContent = t.footer;
-  document.getElementById('t-wisdomLabel').textContent = t.wisdomLabel;
-  document.getElementById('speakBtn').textContent = t.speakBtn;
+  document.getElementById('t-tgLink').textContent = t.tgLink;
   document.getElementById('bubble').textContent = t.bubbleIdle;
   document.getElementById('status').textContent = '';
 }
@@ -243,23 +208,126 @@ function copyAddr() {
   });
 }
 
+/* === Anger Eye === */
+const eyeCanvas = document.getElementById('angerEye');
+const eyeCtx = eyeCanvas.getContext('2d');
+let eyeAnger = 0;
+let eyeTargetAnger = 0;
+
+function drawAngerEye(anger) {
+  eyeCtx.clearRect(0, 0, 40, 40);
+  // anger 0-1
+  const r = Math.floor(100 + anger * 155);
+  const g = Math.floor(80 - anger * 80);
+  const b = Math.floor(20 - anger * 20);
+  const color = `rgb(${r},${g},${b})`;
+  const pupilColor = anger > 0.7 ? '#ff0000' : anger > 0.3 ? '#cc4400' : '#1a1235';
+  // White of eye
+  eyeCtx.fillStyle = color;
+  eyeCtx.fillRect(4, 12, 32, 20);
+  // Pupil
+  eyeCtx.fillStyle = pupilColor;
+  const pupilSize = 6 + Math.floor(anger * 4);
+  eyeCtx.fillRect(20 - pupilSize/2, 22 - pupilSize/2, pupilSize, pupilSize);
+  // Eyelid (closes with anger)
+  const lidHeight = Math.floor(anger * 8);
+  eyeCtx.fillStyle = '#0a0a0a';
+  eyeCtx.fillRect(4, 12, 32, lidHeight);
+  // Border
+  eyeCtx.strokeStyle = color;
+  eyeCtx.lineWidth = 2;
+  eyeCtx.strokeRect(4, 12, 32, 20);
+}
+
+function updateAngerUI(level) {
+  currentAngerLevel = level;
+  const pct = ((level - 1) / 4) * 100;
+  const fill = document.getElementById('angerFill');
+  fill.style.width = pct + '%';
+  const colors = ['#c8a84b', '#e8832a', '#e84a2a', '#c82020', '#8b0000'];
+  fill.style.background = colors[level - 1];
+  eyeTargetAnger = (level - 1) / 4;
+}
+
+function animateEye() {
+  eyeAnger += (eyeTargetAnger - eyeAnger) * 0.05;
+  drawAngerEye(eyeAnger);
+  requestAnimationFrame(animateEye);
+}
+animateEye();
+
+/* === Audio === */
 function speakWisdom() {
+  if (currentAudio) {
+    const audio = new Audio(`data:audio/mpeg;base64,${currentAudio}`);
+    audio.play();
+    return;
+  }
   if (!currentWisdom) return;
   window.speechSynthesis.cancel();
   const utter = new SpeechSynthesisUtterance(currentWisdom);
-  const targetLang = T[lang].voiceLang;
-  utter.lang = targetLang;
-  utter.rate = 0.78;
-  utter.pitch = 0.4;
+  utter.lang = T[lang].voiceLang;
+  utter.rate = 0.78; utter.pitch = 0.4;
   const voices = window.speechSynthesis.getVoices();
-  const maleKeywords = ['male','man','yuri','dmitri','viktor','pavel','daniel','alex','fred','ralph','thomas'];
-  const langVoices = voices.filter(v => v.lang.startsWith(targetLang.split('-')[0]));
-  const maleVoice = langVoices.find(v => maleKeywords.some(k => v.name.toLowerCase().includes(k)));
+  const maleKw = ['male','man','yuri','dmitri','viktor','pavel','daniel','alex','fred','ralph'];
+  const langVoices = voices.filter(v => v.lang.startsWith(T[lang].voiceLang.split('-')[0]));
+  const maleVoice = langVoices.find(v => maleKw.some(k => v.name.toLowerCase().includes(k)));
   if (maleVoice) utter.voice = maleVoice;
   else if (langVoices[0]) utter.voice = langVoices[0];
   window.speechSynthesis.speak(utter);
 }
 
+/* === Free Wisdom === */
+async function getFreeWisdom() {
+  const t = T[lang];
+  const btn = document.getElementById('freeBtn');
+  const status = document.getElementById('status');
+  const wisdomBox = document.getElementById('wisdomBox');
+  const bubble = document.getElementById('bubble');
+
+  btn.disabled = true;
+  status.className = 'status checking';
+  status.textContent = t.freeChecking;
+  bubble.textContent = '...';
+  bubble.className = 'speech-bubble visible';
+  wisdomBox.className = 'wisdom-box';
+  document.getElementById('speakBtn').style.display = 'none';
+
+  try {
+    const res = await fetch(`${BACKEND}/free-wisdom`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ lang })
+    });
+    const data = await res.json();
+
+    if (!res.ok) {
+      status.className = 'status error';
+      status.textContent = t.errors[data.error] || t.connErr;
+      bubble.textContent = t.errors[data.error] || '...';
+      btn.disabled = false;
+      return;
+    }
+
+    currentWisdom = data.wisdom;
+    currentAudio = null;
+    status.className = 'status error';
+    status.textContent = '☽ нищебродская мудрость';
+    document.getElementById('wisdomText').textContent = data.wisdom;
+    document.getElementById('t-wisdomLabel').textContent = t.freeWisdomLabel;
+    document.getElementById('t-wisdomLabel').className = 'wisdom-label free-label';
+    wisdomBox.className = 'wisdom-box free-box visible';
+    document.getElementById('speakBtn').style.display = 'none'; // no voice for free
+    bubble.textContent = data.wisdom.substring(0, 60) + (data.wisdom.length > 60 ? '...' : '');
+
+  } catch(e) {
+    status.className = 'status error';
+    status.textContent = t.connErr;
+  }
+  btn.disabled = false;
+}
+
+/* === Paid Wisdom === */
 const usedTxids = new Set();
 
 async function verify() {
@@ -278,7 +346,7 @@ async function verify() {
   document.getElementById('speakBtn').style.display = 'none';
   status.className = 'status checking';
   status.textContent = t.checking;
-  bubble.textContent = t.bubbleReading;
+  bubble.textContent = t.checking;
   bubble.className = 'speech-bubble visible';
 
   try {
@@ -300,21 +368,19 @@ async function verify() {
 
     usedTxids.add(txid);
     currentWisdom = data.wisdom;
+    currentAudio = data.audio || null;
+    updateAngerUI(data.angerLevel || 1);
 
     status.className = 'status success';
     status.textContent = t.received(data.amount.toFixed(1));
     document.getElementById('wisdomText').textContent = data.wisdom;
+    document.getElementById('t-wisdomLabel').textContent = t.wisdomLabel;
+    document.getElementById('t-wisdomLabel').className = 'wisdom-label';
     wisdomBox.className = 'wisdom-box visible';
     document.getElementById('speakBtn').style.display = 'block';
     bubble.textContent = data.wisdom.substring(0, 60) + (data.wisdom.length > 60 ? '...' : '');
 
-    if (data.audio) {
-        const audio = new Audio(`data:audio/mpeg;base64,${data.audio}`);
-        audio.play();
-        document.getElementById('speakBtn').onclick = () => { const a = new Audio(`data:audio/mpeg;base64,${data.audio}`); a.play(); };
-      } else {
-        setTimeout(() => speakWisdom(), 600);
-      }
+    setTimeout(() => speakWisdom(), 600);
 
   } catch(e) {
     status.className = 'status error';
@@ -328,59 +394,44 @@ async function verify() {
 const sc = document.getElementById('sage');
 const sx = sc.getContext('2d');
 const P = (x,y,w,h,c) => { sx.fillStyle=c; sx.fillRect(x*8,y*8,w*8,h*8); };
-
 function drawSage(eyeOpen, handUp) {
   sx.clearRect(0,0,320,320);
   P(2,9,16,13,'#2d1f5e'); P(2,14,2,8,'#1a1235'); P(16,14,2,8,'#1a1235');
   sx.fillStyle='#c8a84b';
   [[5,11],[10,13],[7,16],[14,12],[4,18],[12,17]].forEach(([x,y])=>sx.fillRect(x*8,y*8,4,4));
-  P(3,4,14,7,'#2d1f5e'); P(3,4,14,2,'#1a1235'); P(5,6,10,5,'#2d1f5e');
-  P(6,6,8,5,'#c8a070');
+  P(3,4,14,7,'#2d1f5e'); P(3,4,14,2,'#1a1235'); P(5,6,10,5,'#2d1f5e'); P(6,6,8,5,'#c8a070');
   sx.fillStyle = eyeOpen ? '#f0e0c0' : '#2d1f5e';
   sx.fillRect(7*8,8*8,8,8); sx.fillRect(11*8,8*8,8,8);
   if(eyeOpen){ sx.fillStyle='#1a1235'; sx.fillRect(8*8,8*8,4,4); sx.fillRect(12*8,8*8,4,4); }
   P(5,11,10,3,'#e8e0c8'); P(6,13,8,2,'#c8c0a8'); P(7,15,6,1,'#a8a090');
-  sx.fillStyle='#8a6030'; sx.fillRect(handUp?14*8:15*8, 5*8, 8, handUp?15*8:13*8);
-  sx.fillStyle='#c8a84b'; sx.fillRect((handUp?13:14)*8, 4*8, 16, 8);
-  sx.fillStyle='#4bc8c8'; sx.fillRect((handUp?14:15)*8-4, (handUp?4:5)*8-4, 16, 16);
-  sx.fillStyle='rgba(255,255,255,0.4)'; sx.fillRect((handUp?14:15)*8-2, (handUp?4:5)*8-2, 4, 4);
+  sx.fillStyle='#8a6030'; sx.fillRect(handUp?14*8:15*8,5*8,8,handUp?15*8:13*8);
+  sx.fillStyle='#c8a84b'; sx.fillRect((handUp?13:14)*8,4*8,16,8);
+  sx.fillStyle='#4bc8c8'; sx.fillRect((handUp?14:15)*8-4,(handUp?4:5)*8-4,16,16);
+  sx.fillStyle='rgba(255,255,255,0.4)'; sx.fillRect((handUp?14:15)*8-2,(handUp?4:5)*8-2,4,4);
   P(2,13,2,2,'#c8a070'); P(16,13,2,2,'#c8a070');
   P(3,19,14,3,'#2d1f5e'); P(3,21,2,2,'#4a3880'); P(15,21,2,2,'#4a3880');
 }
-
-let bt=0, eo=true, hu=false, fd=1, fy=0, fr=0;
+let bt=0,eo=true,hu=false,fd=1,fy=0,fr=0;
 function animateSage() {
-  fr++; bt++;
-  if(bt>90) eo=false;
-  if(bt>95){ eo=true; bt=0; }
-  fy += 0.03*fd; if(Math.abs(fy)>1) fd*=-1;
-  hu = fr%120 >= 60;
-  sx.save(); sx.translate(0, Math.round(fy)); drawSage(eo, hu); sx.restore();
+  fr++;bt++;
+  if(bt>90)eo=false; if(bt>95){eo=true;bt=0;}
+  fy+=0.03*fd; if(Math.abs(fy)>1)fd*=-1;
+  hu=fr%120>=60;
+  sx.save();sx.translate(0,Math.round(fy));drawSage(eo,hu);sx.restore();
   requestAnimationFrame(animateSage);
 }
 animateSage();
 
 /* === Stars === */
-const stc = document.getElementById('starfield');
-const stx = stc.getContext('2d');
-function rs(){ stc.width=window.innerWidth; stc.height=window.innerHeight; }
-rs(); window.addEventListener('resize', rs);
-const stars = Array.from({length:80}, () => ({
-  x: Math.random()*window.innerWidth, y: Math.random()*window.innerHeight,
-  s: Math.random()*2+1, t: Math.random()*Math.PI*2, sp: 0.005+Math.random()*0.01
-}));
-function as(){
-  stx.clearRect(0,0,stc.width,stc.height);
-  stars.forEach(s => {
-    s.t += s.sp;
-    stx.fillStyle = `rgba(200,168,75,${0.3+0.7*Math.abs(Math.sin(s.t))})`;
-    stx.fillRect(Math.floor(s.x), Math.floor(s.y), s.s, s.s);
-  });
-  requestAnimationFrame(as);
-}
+const stc=document.getElementById('starfield'),stx=stc.getContext('2d');
+function rs(){stc.width=window.innerWidth;stc.height=window.innerHeight;}
+rs();window.addEventListener('resize',rs);
+const stars=Array.from({length:80},()=>({x:Math.random()*window.innerWidth,y:Math.random()*window.innerHeight,s:Math.random()*2+1,t:Math.random()*Math.PI*2,sp:0.005+Math.random()*0.01}));
+function as(){stx.clearRect(0,0,stc.width,stc.height);stars.forEach(s=>{s.t+=s.sp;stx.fillStyle=`rgba(200,168,75,${0.3+0.7*Math.abs(Math.sin(s.t))})`;stx.fillRect(Math.floor(s.x),Math.floor(s.y),s.s,s.s);});requestAnimationFrame(as);}
 as();
 
 setLang('ru');
+updateAngerUI(1);
 </script>
 </body>
 </html>
