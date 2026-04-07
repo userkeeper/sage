@@ -246,9 +246,16 @@ function speakWisdom() {
   if (!currentWisdom) return;
   window.speechSynthesis.cancel();
   const utter = new SpeechSynthesisUtterance(currentWisdom);
-  utter.lang = T[lang].voiceLang;
-  utter.rate = 0.85;
-  utter.pitch = 0.7;
+  const targetLang = T[lang].voiceLang;
+  utter.lang = targetLang;
+  utter.rate = 0.78;
+  utter.pitch = 0.4;
+  const voices = window.speechSynthesis.getVoices();
+  const maleKeywords = ['male','man','yuri','dmitri','viktor','pavel','daniel','alex','fred','ralph','thomas'];
+  const langVoices = voices.filter(v => v.lang.startsWith(targetLang.split('-')[0]));
+  const maleVoice = langVoices.find(v => maleKeywords.some(k => v.name.toLowerCase().includes(k)));
+  if (maleVoice) utter.voice = maleVoice;
+  else if (langVoices[0]) utter.voice = langVoices[0];
   window.speechSynthesis.speak(utter);
 }
 
