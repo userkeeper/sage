@@ -137,7 +137,7 @@ async function getAudio(text) {
     const res = await fetch('https://api.openai.com/v1/audio/speech', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${OPENAI_KEY}` },
-      body: JSON.stringify({ model: 'tts-1-hd', input: text, voice: 'ash', speed: 0.9 })
+      body: JSON.stringify({ model: 'tts-1-hd', input: text, voice: 'onyx', speed: 0.9 })
     });
     if (!res.ok) { console.log('[TTS] error:', await res.text()); return null; }
     const buffer = await res.buffer();
