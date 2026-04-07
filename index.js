@@ -86,9 +86,9 @@ async function getAudio(text, lang) {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${OPENAI_KEY}` },
       body: JSON.stringify({
-        model: 'tts-1',
+        model: 'tts-1-hd',
         input: text,
-        voice: 'onyx',
+        voice: 'ash',
         speed: 0.9
       })
     });
