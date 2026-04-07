@@ -218,7 +218,7 @@ app.post('/wisdom', async (req, res) => {
     if (!wisdom) return res.status(500).json({ error: 'ai_failed' });
     const audio = await getAudio(wisdom);
     addAnger(ip, 1);
-    await postToTelegram(`🔥 <b>Мудрость мудреца</b>\n\n${wisdom}\n\n<i>— пожертвование: 1 USDT (тест)</i>`);
+    await postToTelegram(`🔥 <b>Мудрость мудреца</b>\n\n${wisdom}\n\n<i>— пожертвование: 1 USDT</i>`);
     return res.json({ wisdom, amount: 1.0, audio, angerLevel });
   }
 
