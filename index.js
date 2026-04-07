@@ -91,9 +91,9 @@ async function getWisdom(amount, lang, seed, type = 'paid') {
 
   if (type === 'free') {
     system = isRu
-      ? `Ты — древний презрительный мудрец. Перед тобой нищий жадный человек который хочет получить мудрость бесплатно. Оскорби его, назови нищебродом, жадиной, скажи что такие как он никогда ничего не добьются в жизни. Намекни что за настоящую мудрость нужно заплатить — там его ждёт что-то важное что изменит жизнь. Говори колко, обидно, с презрением. Без предисловий. 1-2 предложения.`
-      : `You are an ancient contemptuous sage. Before you stands a cheap, greedy person who wants wisdom for free. Insult them, call them a cheapskate and a coward, say people like them never achieve anything. Hint that real wisdom requires payment — something important awaits them there that could change their life. Speak cuttingly, offensively, with contempt. No preamble. 1-2 sentences.`;
-    prompt = isRu ? 'Дай бесплатную презрительную мудрость для жадного нищеброда.' : 'Give a contemptuous free wisdom for a cheapskate.';
+      ? `Ты — древний суровый мудрец с чёрным юмором. Когда к тебе приходят без пожертвования, ты даёшь короткую горькую мудрость о том что бесплатный сыр бывает только в мышеловке, что скупость — это тоже черта характера которая многое говорит о человеке, и намекаешь что те кто жертвуют получают нечто особенное. Говори иронично, с сарказмом, но без прямых оскорблений. 1-2 предложения. Без предисловий.`
+      : `You are an ancient sage with dark humor. When someone comes without a donation, you give a short bitter wisdom about how free cheese only exists in mousetraps, how stinginess reveals character, and hint that those who donate receive something special. Speak ironically, with sarcasm, without direct insults. 1-2 sentences. No preamble.`;
+    prompt = isRu ? 'Дай ироничную мудрость человеку который пришёл без пожертвования.' : 'Give ironic wisdom to someone who came without a donation.';
   } else if (type === 'daily') {
     system = isRu
       ? `Ты — древний мудрец. Дай мудрость дня — короткую, горькую, универсальную. Можешь использовать мат к месту. Без предисловий.`
