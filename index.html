@@ -92,8 +92,9 @@
   .wisdom-box.visible { display:block; }
   .wisdom-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; }
   .wisdom-label { font-size:11px; color:#c8a84b; letter-spacing:1px; }
-  .speak-btn { background:none; border:2px solid #c8a84b; color:#c8a84b; font-family:'Press Start 2P',monospace; font-size:7px; padding:5px 9px; cursor:pointer; transition: background 0.1s, color 0.1s; }
-  .speak-btn:hover { background:#c8a84b; color:#0a0a0a; }
+  .speak-btn { background:#c8a84b; border:none; color:#0a0a0a; font-family:'Press Start 2P',monospace; font-size:9px; padding:14px; cursor:pointer; width:100%; margin-top:12px; box-shadow:4px 4px 0 #8a7030; transition: transform 0.08s, box-shadow 0.08s; letter-spacing:1px; }
+  .speak-btn:hover { transform:translate(-1px,-1px); box-shadow:5px 5px 0 #8a7030; }
+  .speak-btn:active { transform:translate(2px,2px); box-shadow:2px 2px 0 #8a7030; }
   .footer { margin-top:40px; font-family:'VT323',monospace; font-size:14px; color:#3a3020; text-align:center; z-index:1; }
 </style>
 </head>
@@ -127,8 +128,8 @@
   <div class="wisdom-box" id="wisdomBox">
     <div class="wisdom-header">
       <span class="wisdom-label" id="t-wisdomLabel"></span>
-      <button class="speak-btn" id="speakBtn" onclick="speakWisdom()" style="display:none">▶ ОЗВУЧИТЬ</button>
     </div>
+    <button class="speak-btn" id="speakBtn" onclick="speakWisdom()" style="display:none">▶ ОЗВУЧИТЬ</button>
     <div id="wisdomText"></div>
   </div>
 </div>
