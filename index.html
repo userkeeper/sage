@@ -300,7 +300,13 @@ async function verify() {
     document.getElementById('speakBtn').style.display = 'block';
     bubble.textContent = data.wisdom.substring(0, 60) + (data.wisdom.length > 60 ? '...' : '');
 
-    setTimeout(() => speakWisdom(), 600);
+    if (data.audio) {
+        const audio = new Audio(`data:audio/mpeg;base64,${data.audio}`);
+        audio.play();
+        document.getElementById('speakBtn').onclick = () => { const a = new Audio(`data:audio/mpeg;base64,${data.audio}`); a.play(); };
+      } else {
+        setTimeout(() => speakWisdom(), 600);
+      }
 
   } catch(e) {
     status.className = 'status error';

@@ -8,6 +8,9 @@ app.use(express.json());
 
 const WALLET = 'TNnCZrgSQwEgWKViC1eci2MxCMdsoqTWVu';
 const ANTHROPIC_KEY = process.env.ANTHROPIC_API_KEY;
+const ELEVEN_KEY = process.env.ELEVEN_API_KEY;
+const VOICE_RU = process.env.VOICE_RU || 'NOpBlnGInO9m6vDvFkFC';
+const VOICE_EN = process.env.VOICE_EN || 'HAvvFKatz0uu0Fv55Riy';
 const usedTxids = new Set();
 
 app.get('/health', (req, res) => res.json({ ok: true }));
@@ -41,6 +44,31 @@ async function getWisdom(amount, lang) {
   return ai.content?.[0]?.text || null;
 }
 
+async function getAudio(text, lang) {
+  const voiceId = lang === 'ru' ? VOICE_RU : VOICE_EN;
+  const res = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'xi-api-key': ELEVEN_KEY
+    },
+    body: JSON.stringify({
+      text,
+      model_id: 'eleven_multilingual_v2',
+      voice_settings: {
+        stability: 0.4,
+        similarity_boost: 0.8,
+        style: 0.5,
+        use_speaker_boost: true
+      }
+    })
+  });
+
+  if (!res.ok) return null;
+  const buffer = await res.buffer();
+  return buffer.toString('base64');
+}
+
 app.post('/wisdom', async (req, res) => {
   const { txid, lang } = req.body;
 
@@ -50,7 +78,8 @@ app.post('/wisdom', async (req, res) => {
   if (txid === process.env.TEST_PASSWORD) {
     const wisdom = await getWisdom(1.0, lang);
     if (!wisdom) return res.status(500).json({ error: 'ai_failed' });
-    return res.json({ wisdom, amount: 1.0 });
+    const audio = await getAudio(wisdom, lang);
+    return res.json({ wisdom, amount: 1.0, audio });
   }
 
   if (usedTxids.has(txid)) return res.status(400).json({ error: 'already_used' });
@@ -75,8 +104,10 @@ app.post('/wisdom', async (req, res) => {
     const wisdom = await getWisdom(amount, lang);
     if (!wisdom) return res.status(500).json({ error: 'ai_failed' });
 
+    const audio = await getAudio(wisdom, lang);
+
     usedTxids.add(txid);
-    res.json({ wisdom, amount });
+    res.json({ wisdom, amount, audio });
 
   } catch (e) {
     console.error(e);
