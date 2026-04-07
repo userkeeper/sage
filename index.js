@@ -194,6 +194,11 @@ app.post('/free-wisdom', async (req, res) => {
 
   freeByIP.set(ip, { date: today, used: true });
 
+  const label = lang === 'ru'
+    ? '🪙 <b>Нищебродская мудрость</b> (бесплатная)'
+    : '🪙 <b>Cheapskate wisdom</b> (free tier)';
+  await postToTelegram(`${label}\n\n${wisdom}`);
+
   // No audio for free tier
   res.json({ wisdom, free: true });
 });
