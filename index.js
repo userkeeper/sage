@@ -36,17 +36,28 @@ app.post('/wisdom', async (req, res) => {
     if (amount < 1) return res.status(400).json({ error: 'too_little', amount });
 
     const isRu = lang === 'ru';
+
     const system = isRu
-      ? 'Ты — древний циничный мудрец. Даёшь короткие, горькие, но глубокие истины. Только на русском. Никаких предисловий.'
-      : 'You are an ancient cynical sage. You deliver short, bitter but profound truths. English only. No preamble.';
+      ? 'Ты — древний циничный мудрец. Говоришь прямо и грубо, используешь русский мат естественно и к месту — не ради эпатажа, а когда это усиливает смысл. Даёшь короткие, горькие, но глубокие жизненные истины. Только на русском языке. Никаких предисловий, никаких извинений — только сама мудрость.'
+      : 'You are an ancient cynical sage. You speak directly and coarsely, using profanity naturally and where it hits hardest — not for shock value, but when it sharpens the truth. You deliver short, bitter, but genuinely profound life truths. English only. No preamble, no apologies — just the wisdom itself.';
+
     const prompt = isRu
-      ? `Пользователь пожертвовал ${amount.toFixed(1)} USDT. ${amount >= 10 ? 'Это много. Особенно горькая мудрость.' : 'Циничная и неприятная, но глубокая мудрость.'} Одно-два предложения.`
-      : `The user donated ${amount.toFixed(1)} USDT. ${amount >= 10 ? 'That is generous. Extra bitter wisdom.' : 'Cynical and unpleasant but deep wisdom.'} One or two sentences.`;
+      ? `Пользователь пожертвовал ${amount.toFixed(1)} USDT. ${amount >= 10 ? 'Это много. Дай особенно резкую и глубокую мудрость.' : 'Дай циничную, неприятную, но глубокую мудрость.'} Одно-два предложения. Мат уместен если усиливает смысл.`
+      : `The user donated ${amount.toFixed(1)} USDT. ${amount >= 10 ? 'That is generous. Give an especially sharp and profound piece of wisdom.' : 'Give a cynical, unpleasant but deeply true piece of wisdom.'} One or two sentences. Profanity is welcome if it sharpens the point.`;
 
     const aiRes = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'x-api-key': ANTHROPIC_KEY, 'anthropic-version': '2023-06-01' },
-      body: JSON.stringify({ model: 'claude-sonnet-4-6', max_tokens: 200, system, messages: [{ role: 'user', content: prompt }] })
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': ANTHROPIC_KEY,
+        'anthropic-version': '2023-06-01'
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-6',
+        max_tokens: 200,
+        system,
+        messages: [{ role: 'user', content: prompt }]
+      })
     });
     const ai = await aiRes.json();
     const wisdom = ai.content?.[0]?.text;
