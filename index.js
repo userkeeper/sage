@@ -16,6 +16,27 @@ app.post('/wisdom', async (req, res) => {
   const { txid, lang } = req.body;
 
   if (!txid) return res.status(400).json({ error: 'no_txid' });
+
+  // Secret test mode
+  if (txid === process.env.TEST_PASSWORD) {
+    const isRu = lang === 'ru';
+    const system = isRu
+      ? 'Ты — древний циничный мудрец. Говоришь прямо и грубо, используешь русский мат естественно и к месту — не ради эпатажа, а когда это усиливает смысл. Даёшь короткие, горькие, но глубокие жизненные истины. Только на русском языке. Никаких предисловий, никаких извинений — только сама мудрость.'
+      : 'You are an ancient cynical sage. You speak directly and coarsely, using profanity naturally and where it hits hardest — not for shock value, but when it sharpens the truth. You deliver short, bitter, but genuinely profound life truths. English only. No preamble, no apologies — just the wisdom itself.';
+    const prompt = isRu
+      ? 'Дай циничную, неприятную, но глубокую мудрость. Одно-два предложения. Мат уместен если усиливает смысл.'
+      : 'Give a cynical, unpleasant but deeply true piece of wisdom. One or two sentences. Profanity is welcome if it sharpens the point.';
+    const aiRes = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-api-key': ANTHROPIC_KEY, 'anthropic-version': '2023-06-01' },
+      body: JSON.stringify({ model: 'claude-sonnet-4-6', max_tokens: 200, system, messages: [{ role: 'user', content: prompt }] })
+    });
+    const ai = await aiRes.json();
+    const wisdom = ai.content?.[0]?.text;
+    if (!wisdom) return res.status(500).json({ error: 'ai_failed' });
+    return res.json({ wisdom, amount: 1.0 });
+  }
+
   if (usedTxids.has(txid)) return res.status(400).json({ error: 'already_used' });
 
   try {
