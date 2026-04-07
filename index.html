@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Мудрец Пустоты</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323:wght@400&display=swap');
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #0a0a0a;
+    color: #e8e0c8;
+    font-family: 'Press Start 2P', monospace;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 40px 20px;
+    position: relative;
+    overflow-x: hidden;
+  }
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.15) 2px,rgba(0,0,0,0.15) 4px);
+    pointer-events: none;
+    z-index: 100;
+  }
+  .stars { position: fixed; inset: 0; pointer-events: none; z-index: 0; }
+  .lang-switcher { display: flex; margin-bottom: 32px; z-index: 1; border: 2px solid #3a3020; }
+  .lang-btn { background: #0d0d0d; color: #5a5040; border: none; font-family: 'Press Start 2P', monospace; font-size: 9px; padding: 10px 20px; cursor: pointer; letter-spacing: 1px; border-right: 2px solid #3a3020; transition: background 0.1s, color 0.1s; }
+  .lang-btn:last-child { border-right: none; }
+  .lang-btn.active { background: #c8a84b; color: #0a0a0a; }
+  .lang-btn:hover:not(.active) { background: #1a1a1a; color: #c8a84b; }
+  .title { font-size: clamp(10px,2.5vw,18px); color: #c8a84b; text-align: center; margin-bottom: 8px; letter-spacing: 2px; text-shadow: 0 0 20px rgba(200,168,75,0.5); z-index: 1; }
+  .subtitle { font-family: 'VT323', monospace; font-size: clamp(14px,3vw,22px); color: #7a7060; text-align: center; margin-bottom: 40px; letter-spacing: 1px; z-index: 1; }
+  .sage-container { position: relative; z-index: 1; margin-bottom: 30px; }
+  canvas#sage { image-rendering: pixelated; image-rendering: crisp-edges; display: block; }
+  .speech-bubble { position: absolute; top: -10px; left: 190px; background: #1a1a1a; border: 3px solid #c8a84b; padding: 14px; width: 220px; font-family: 'VT323', monospace; font-size: 16px; color: #e8e0c8; line-height: 1.4; display: none; z-index: 10; box-shadow: 4px 4px 0 #c8a84b; }
+  .speech-bubble.visible { display: block; }
+  .speech-bubble::before { content:''; position:absolute; left:-18px; top:20px; width:0; height:0; border-top:8px solid transparent; border-bottom:8px solid transparent; border-right:15px solid #c8a84b; }
+  .speech-bubble::after { content:''; position:absolute; left:-12px; top:20px; width:0; height:0; border-top:8px solid transparent; border-bottom:8px solid transparent; border-right:15px solid #1a1a1a; }
+  .card { background:#111; border:3px solid #3a3020; padding:28px; width:100%; max-width:520px; z-index:1; box-shadow:6px 6px 0 #2a2010; }
+  .wallet-label { font-size:8px; color:#7a7060; margin-bottom:10px; letter-spacing:1px; }
+  .wallet-address { font-family:'VT323',monospace; font-size:17px; color:#c8a84b; word-break:break-all; background:#0d0d0d; border:2px solid #2a2010; padding:10px 12px; margin-bottom:6px; cursor:pointer; transition: border-color 0.1s; }
+  .wallet-address:hover { border-color:#c8a84b; }
+  .copy-hint { font-family:'VT323',monospace; font-size:14px; color:#4a4030; margin-bottom:24px; text-align:right; }
+  .divider { border:none; border-top:2px solid #2a2010; margin:0 0 24px; }
+  .field-label { font-size:7px; color:#7a7060; letter-spacing:1px; margin-bottom:8px; }
+  .tx-input { width:100%; background:#0d0d0d; border:2px solid #3a3020; color:#e8e0c8; font-family:'VT323',monospace; font-size:16px; padding:10px 12px; outline:none; margin-bottom:20px; letter-spacing:0.5px; }
+  .tx-input:focus { border-color:#c8a84b; }
+  .tx-input::placeholder { color:#3a3020; }
+  .amount-note { font-family:'VT323',monospace; font-size:15px; color:#5a5040; margin-bottom:20px; }
+  .pixel-coin { display:inline-block; width:12px; height:12px; background:#c8a84b; box-shadow:2px 0 #8a7030,0 2px #8a7030; margin-right:4px; vertical-align:middle; }
+  .btn { width:100%; background:#c8a84b; color:#0a0a0a; border:none; font-family:'Press Start 2P',monospace; font-size:9px; padding:14px; cursor:pointer; letter-spacing:1px; box-shadow:4px 4px 0 #8a7030; transition: transform 0.08s, box-shadow 0.08s; }
+  .btn:hover { transform:translate(-1px,-1px); box-shadow:5px 5px 0 #8a7030; }
+  .btn:active { transform:translate(2px,2px); box-shadow:2px 2px 0 #8a7030; }
+  .btn:disabled { background:#3a3020; color:#6a6050; box-shadow:none; cursor:default; transform:none; }
+  .status { font-family:'VT323',monospace; font-size:16px; margin-top:16px; min-height:24px; text-align:center; }
+  .status.checking { color:#7a7060; }
+  .status.error { color:#c84b4b; }
+  .status.success { color:#4bc8a8; }
+  .wisdom-box { margin-top:20px; background:#0d0d0d; border:3px solid #c8a84b; padding:18px; font-family:'VT323',monospace; font-size:18px; color:#e8c878; line-height:1.5; display:none; text-align:left; box-shadow:4px 4px 0 #c8a84b; }
+  .wisdom-box.visible { display:block; }
+  .wisdom-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; }
+  .wisdom-label { font-size:11px; color:#c8a84b; letter-spacing:1px; }
+  .speak-btn { background:none; border:2px solid #c8a84b; color:#c8a84b; font-family:'Press Start 2P',monospace; font-size:7px; padding:5px 9px; cursor:pointer; transition: background 0.1s, color 0.1s; }
+  .speak-btn:hover { background:#c8a84b; color:#0a0a0a; }
+  .footer { margin-top:40px; font-family:'VT323',monospace; font-size:14px; color:#3a3020; text-align:center; z-index:1; }
+</style>
+</head>
+<body>
+
+<canvas class="stars" id="starfield"></canvas>
+
+<div class="lang-switcher">
+  <button class="lang-btn active" onclick="setLang('ru')">РУС</button>
+  <button class="lang-btn" onclick="setLang('en')">ENG</button>
+</div>
+
+<div class="title" id="t-title">МУДРЕЦ ПУСТОТЫ</div>
+<div class="subtitle" id="t-subtitle">Пожертвуй — и узнай то, что лучше бы не знал</div>
+
+<div class="sage-container">
+  <canvas id="sage" width="160" height="180"></canvas>
+  <div class="speech-bubble" id="bubble">...</div>
+</div>
+
+<div class="card">
+  <div class="wallet-label" id="t-walletLabel">USDT TRC-20 · КОШЕЛЁК МУДРЕЦА</div>
+  <div class="wallet-address" onclick="copyAddr()">TNnCZrgSQwEgWKViC1eci2MxCMdsoqTWVu</div>
+  <div class="copy-hint" id="copyHint"></div>
+  <hr class="divider">
+  <div class="field-label" id="t-fieldLabel">TXID ТРАНЗАКЦИИ (МИНИМУМ 1 USDT)</div>
+  <input class="tx-input" id="txid" type="text" spellcheck="false">
+  <div class="amount-note"><span class="pixel-coin"></span><span id="t-amountNote"></span></div>
+  <button class="btn" id="verifyBtn" onclick="verify()"></button>
+  <div class="status" id="status"></div>
+  <div class="wisdom-box" id="wisdomBox">
+    <div class="wisdom-header">
+      <span class="wisdom-label" id="t-wisdomLabel"></span>
+      <button class="speak-btn" id="speakBtn" onclick="speakWisdom()" style="display:none">▶ ОЗВУЧИТЬ</button>
+    </div>
+    <div id="wisdomText"></div>
+  </div>
+</div>
+
+<div class="footer" id="t-footer"></div>
+
+<script>
+const BACKEND = 'https://sage-production-6a45.up.railway.app';
+const WALLET = 'TNnCZrgSQwEgWKViC1eci2MxCMdsoqTWVu';
+let lang = 'ru';
+let currentWisdom = '';
+
+const T = {
+  ru: {
+    title: 'МУДРЕЦ ПУСТОТЫ',
+    subtitle: 'Пожертвуй — и узнай то, что лучше бы не знал',
+    walletLabel: 'USDT TRC-20 · КОШЕЛЁК МУДРЕЦА',
+    copyHint: '[ нажми чтобы скопировать ]',
+    copiedHint: '[ скопировано! ]',
+    fieldLabel: 'TXID ТРАНЗАКЦИИ (МИНИМУМ 1 USDT)',
+    placeholder: 'вставь хэш транзакции...',
+    amountNote: 'мин. 1 USDT · TRON сеть · TRC-20',
+    btnText: '▶ ПРОБУДИТЬ МУДРЕЦА',
+    checking: '⏳ Мудрец смотрит в блокчейн...',
+    noTxid: '⚠ Вставь TXID транзакции',
+    usedTx: '⚠ Эта мудрость уже была куплена',
+    connErr: '⚠ Ошибка соединения. Попробуй позже.',
+    errors: {
+      not_found: 'Транзакция не найдена',
+      not_confirmed: 'Транзакция не подтверждена',
+      no_usdt: 'USDT не найден в транзакции',
+      not_usdt: 'Это не USDT TRC-20',
+      wrong_address: 'Адрес получателя не совпадает',
+      too_little: 'Слишком мало (мин. 1 USDT)',
+      already_used: 'Мудрость уже куплена',
+      ai_failed: 'Мудрец молчит...',
+      server_error: 'Ошибка сервера'
+    },
+    received: (a) => `✓ ${a} USDT получено`,
+    wisdomLabel: '☽ МУДРОСТЬ ПОЛУЧЕНА ☾',
+    speakBtn: '▶ ОЗВУЧИТЬ',
+    bubbleIdle: 'Брось монету в пустоту...',
+    bubbleReading: 'Читаю блокчейн...',
+    footer: 'Мудрость не возвращают. Деньги тоже.',
+    voiceLang: 'ru-RU'
+  },
+  en: {
+    title: 'THE VOID SAGE',
+    subtitle: "Donate — and learn what you'd rather not know",
+    walletLabel: "USDT TRC-20 · SAGE'S WALLET",
+    copyHint: '[ click to copy ]',
+    copiedHint: '[ copied! ]',
+    fieldLabel: 'TRANSACTION TXID (MINIMUM 1 USDT)',
+    placeholder: 'paste transaction hash...',
+    amountNote: 'min. 1 USDT · TRON network · TRC-20',
+    btnText: '▶ AWAKEN THE SAGE',
+    checking: '⏳ The sage gazes into the blockchain...',
+    noTxid: '⚠ Paste your TXID first',
+    usedTx: '⚠ This wisdom has already been purchased',
+    connErr: '⚠ Connection error. Try again later.',
+    errors: {
+      not_found: 'Transaction not found',
+      not_confirmed: 'Transaction not confirmed',
+      no_usdt: 'No USDT found in transaction',
+      not_usdt: 'This is not USDT TRC-20',
+      wrong_address: 'Wrong recipient address',
+      too_little: 'Too little (min. 1 USDT)',
+      already_used: 'Wisdom already purchased',
+      ai_failed: 'The sage is silent...',
+      server_error: 'Server error'
+    },
+    received: (a) => `✓ ${a} USDT received`,
+    wisdomLabel: '☽ WISDOM GRANTED ☾',
+    speakBtn: '▶ SPEAK',
+    bubbleIdle: 'Cast a coin into the void...',
+    bubbleReading: 'Reading the blockchain...',
+    footer: 'Wisdom is non-refundable. So is your money.',
+    voiceLang: 'en-US'
+  }
+};
+
+function setLang(l) {
+  lang = l;
+  document.querySelectorAll('.lang-btn').forEach(b => {
+    b.classList.toggle('active',
+      (l === 'ru' && b.textContent === 'РУС') ||
+      (l === 'en' && b.textContent === 'ENG')
+    );
+  });
+  const t = T[lang];
+  document.getElementById('t-title').textContent = t.title;
+  document.getElementById('t-subtitle').textContent = t.subtitle;
+  document.getElementById('t-walletLabel').textContent = t.walletLabel;
+  document.getElementById('copyHint').textContent = t.copyHint;
+  document.getElementById('t-fieldLabel').textContent = t.fieldLabel;
+  document.getElementById('txid').placeholder = t.placeholder;
+  document.getElementById('t-amountNote').textContent = t.amountNote;
+  document.getElementById('verifyBtn').textContent = t.btnText;
+  document.getElementById('t-footer').textContent = t.footer;
+  document.getElementById('t-wisdomLabel').textContent = t.wisdomLabel;
+  document.getElementById('speakBtn').textContent = t.speakBtn;
+  document.getElementById('bubble').textContent = t.bubbleIdle;
+  document.getElementById('status').textContent = '';
+}
+
+function copyAddr() {
+  const t = T[lang];
+  navigator.clipboard.writeText(WALLET).then(() => {
+    document.getElementById('copyHint').textContent = t.copiedHint;
+    setTimeout(() => document.getElementById('copyHint').textContent = t.copyHint, 2000);
+  });
+}
+
+function speakWisdom() {
+  if (!currentWisdom) return;
+  window.speechSynthesis.cancel();
+  const utter = new SpeechSynthesisUtterance(currentWisdom);
+  utter.lang = T[lang].voiceLang;
+  utter.rate = 0.85;
+  utter.pitch = 0.7;
+  window.speechSynthesis.speak(utter);
+}
+
+const usedTxids = new Set();
+
+async function verify() {
+  const t = T[lang];
+  const txid = document.getElementById('txid').value.trim();
+  const btn = document.getElementById('verifyBtn');
+  const status = document.getElementById('status');
+  const wisdomBox = document.getElementById('wisdomBox');
+  const bubble = document.getElementById('bubble');
+
+  if (!txid) { status.className='status error'; status.textContent=t.noTxid; return; }
+  if (usedTxids.has(txid)) { status.className='status error'; status.textContent=t.usedTx; return; }
+
+  btn.disabled = true;
+  wisdomBox.className = 'wisdom-box';
+  document.getElementById('speakBtn').style.display = 'none';
+  status.className = 'status checking';
+  status.textContent = t.checking;
+  bubble.textContent = t.bubbleReading;
+  bubble.className = 'speech-bubble visible';
+
+  try {
+    const res = await fetch(`${BACKEND}/wisdom`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ txid, lang })
+    });
+    const data = await res.json();
+
+    if (!res.ok) {
+      const msg = t.errors[data.error] || t.connErr;
+      status.className = 'status error';
+      status.textContent = '✗ ' + msg;
+      bubble.textContent = msg;
+      btn.disabled = false;
+      return;
+    }
+
+    usedTxids.add(txid);
+    currentWisdom = data.wisdom;
+
+    status.className = 'status success';
+    status.textContent = t.received(data.amount.toFixed(1));
+    document.getElementById('wisdomText').textContent = data.wisdom;
+    wisdomBox.className = 'wisdom-box visible';
+    document.getElementById('speakBtn').style.display = 'block';
+    bubble.textContent = data.wisdom.substring(0, 60) + (data.wisdom.length > 60 ? '...' : '');
+
+    setTimeout(() => speakWisdom(), 600);
+
+  } catch(e) {
+    status.className = 'status error';
+    status.textContent = t.connErr;
+    bubble.textContent = '...';
+  }
+  btn.disabled = false;
+}
+
+/* === Pixel Sage === */
+const sc = document.getElementById('sage');
+const sx = sc.getContext('2d');
+const P = (x,y,w,h,c) => { sx.fillStyle=c; sx.fillRect(x*8,y*8,w*8,h*8); };
+
+function drawSage(eyeOpen, handUp) {
+  sx.clearRect(0,0,320,320);
+  P(2,9,16,13,'#2d1f5e'); P(2,14,2,8,'#1a1235'); P(16,14,2,8,'#1a1235');
+  sx.fillStyle='#c8a84b';
+  [[5,11],[10,13],[7,16],[14,12],[4,18],[12,17]].forEach(([x,y])=>sx.fillRect(x*8,y*8,4,4));
+  P(3,4,14,7,'#2d1f5e'); P(3,4,14,2,'#1a1235'); P(5,6,10,5,'#2d1f5e');
+  P(6,6,8,5,'#c8a070');
+  sx.fillStyle = eyeOpen ? '#f0e0c0' : '#2d1f5e';
+  sx.fillRect(7*8,8*8,8,8); sx.fillRect(11*8,8*8,8,8);
+  if(eyeOpen){ sx.fillStyle='#1a1235'; sx.fillRect(8*8,8*8,4,4); sx.fillRect(12*8,8*8,4,4); }
+  P(5,11,10,3,'#e8e0c8'); P(6,13,8,2,'#c8c0a8'); P(7,15,6,1,'#a8a090');
+  sx.fillStyle='#8a6030'; sx.fillRect(handUp?14*8:15*8, 5*8, 8, handUp?15*8:13*8);
+  sx.fillStyle='#c8a84b'; sx.fillRect((handUp?13:14)*8, 4*8, 16, 8);
+  sx.fillStyle='#4bc8c8'; sx.fillRect((handUp?14:15)*8-4, (handUp?4:5)*8-4, 16, 16);
+  sx.fillStyle='rgba(255,255,255,0.4)'; sx.fillRect((handUp?14:15)*8-2, (handUp?4:5)*8-2, 4, 4);
+  P(2,13,2,2,'#c8a070'); P(16,13,2,2,'#c8a070');
+  P(3,19,14,3,'#2d1f5e'); P(3,21,2,2,'#4a3880'); P(15,21,2,2,'#4a3880');
+}
+
+let bt=0, eo=true, hu=false, fd=1, fy=0, fr=0;
+function animateSage() {
+  fr++; bt++;
+  if(bt>90) eo=false;
+  if(bt>95){ eo=true; bt=0; }
+  fy += 0.03*fd; if(Math.abs(fy)>1) fd*=-1;
+  hu = fr%120 >= 60;
+  sx.save(); sx.translate(0, Math.round(fy)); drawSage(eo, hu); sx.restore();
+  requestAnimationFrame(animateSage);
+}
+animateSage();
+
+/* === Stars === */
+const stc = document.getElementById('starfield');
+const stx = stc.getContext('2d');
+function rs(){ stc.width=window.innerWidth; stc.height=window.innerHeight; }
+rs(); window.addEventListener('resize', rs);
+const stars = Array.from({length:80}, () => ({
+  x: Math.random()*window.innerWidth, y: Math.random()*window.innerHeight,
+  s: Math.random()*2+1, t: Math.random()*Math.PI*2, sp: 0.005+Math.random()*0.01
+}));
+function as(){
+  stx.clearRect(0,0,stc.width,stc.height);
+  stars.forEach(s => {
+    s.t += s.sp;
+    stx.fillStyle = `rgba(200,168,75,${0.3+0.7*Math.abs(Math.sin(s.t))})`;
+    stx.fillRect(Math.floor(s.x), Math.floor(s.y), s.s, s.s);
+  });
+  requestAnimationFrame(as);
+}
+as();
+
+setLang('ru');
+</script>
+</body>
+</html>
