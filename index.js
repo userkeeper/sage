@@ -12,42 +12,45 @@ const OPENAI_KEY = process.env.OPENAI_API_KEY;
 const TG_TOKEN = process.env.TG_BOT_TOKEN;
 const TG_CHANNEL = process.env.TG_CHANNEL || '@mudrets_on';
 
-// In-memory storage
 const usedTxids = new Set();
-const freeByIP = new Map(); // ip -> { date, count }
-const angerByIP = new Map(); // ip -> total usd donated today
+const freeByIP = new Map();
+const angerByIP = new Map();
 const dailyWisdomSent = { date: '', sent: false };
 
 const RU_PERSONAS = [
-  "Mellstroy: в декабре 2025 сам признался что находится в розыске Интерпола по запросу Казахстана, застрял на Кипре, его контент признан экстремистским в Беларуси, следствие хочет арестовать его имущество на 1 млрд рублей",
-  "Моргенштерн: в январе 2025 объявлен в федеральный розыск, недвижимость на 200 млн арестована, в марте 2026 начался заочный суд, выступает только в 3 странах за $150k минимум",
-  "Братишкин: в декабре 2025 получил 7-й бан на Twitch из-за картины с голой женщиной на стене, сам сказал 'я уже даже в свой онлайн не верю', обвинён в накрутке ботами",
-  "Хованский: вышел из СИЗО в 2021, уехал в Сербию, женился, развёлся, расстался с новой девушкой за 9 месяцев, в 2025 пьяный плакал разговаривая с нейросетью, не может продать квартиру где его арестовали",
-  "Михаил Литвин: в 2025 прокуратура установила что он купил военный билет — сам пошутил об этом публично, шутку заметили, аннулировали отсрочку, грозит уголовка, при этом снимает влоги о дисциплине каждый день",
-  "Evelone192: в мае 2025 Twitch забанил его и в письме посоветовал обратиться к психиатру, Steam заблокировал его аккаунт со скинами на $150k по подозрению в краже — разблокировали через год",
+  "Mellstroy: в декабре 2025 сам признался что в розыске Интерпола по запросу Казахстана, застрял на Кипре, его контент признан экстремистским в Беларуси, следствие хочет арестовать его имущество на 1 млрд рублей по делу об отмывании денег через казино",
+  "Моргенштерн: в марте 2026 начался заочный суд за уклонение от обязанностей иноагента, его недвижимость на 200 млн рублей арестована в январе 2025, из-за страха задержания выступает только в США, Испании и на Кипре за $150k минимум",
+  "Братишкин: в декабре 2025 получил 7-й бан на Twitch из-за картины с голой женщиной на стене за спиной, в 2025 сам признался 'я уже даже в свой онлайн не верю', обвинён в накрутке зрителей ботами, в ноябре 2025 посетил Госдуму",
+  "Хованский: вышел из СИЗО в 2021, уехал в Сербию спасаясь от мобилизации, женился, развёлся, расстался с новой девушкой за 9 месяцев, в 2025 году пьяный плакал разговаривая с нейросетью на стриме",
+  "Михаил Литвин: пошутил публично что купил военный билет — прокуратура Москвы это проверила и аннулировала отсрочку в июне 2025, теперь грозит уголовка за уклонение от армии, при этом каждый день снимает влоги о дисциплине и продуктивности",
+  "Evelone: в мае 2025 Twitch забанил его канал и в официальном письме посоветовал обратиться к врачу по поводу психического здоровья, в 2023 Steam заблокировал его аккаунт со скинами на $150 тысяч по подозрению в краже — разблокировали только через год переговоров",
+  "Buster: в мае 2025 выяснилось что его компания задолжала налоговой 4.5 млн рублей, в 2025 расстался с Диларой — бывшей женой Моргенштерна с которой встречался больше года, в декабре 2025 закрыл киберспортивную команду GUN5 по CS2 заявив что потерял интерес",
+  "Zubarefff: получил уже 6 банов на Twitch включая бан за сексуальный контент в июле 2025, живёт без постоянного места жительства — после Китая скитается между Дубаем и Казахстаном, его участие в фильме Скуф вызвало скандал из-за старых шуток про русских младенцев и доната Слава ВСУ",
+  "Злой (Zloy): 10 лет стримит казино, сам придумал термин бурмалда для зависимых от казино, рекламирует азартные игры но открыто говорит что это его основной заработок",
   "Gensyxa: в декабре 2025 стала SLAY Queen второй раз, в том же году рассталась с двумя парнями подряд — сначала с Evelone потом с рэпером Toxi$, выпустила трек Френдзона",
-  "Данила Поперечный: уехал из России, стендап в эмиграции не взлетел, злится когда его называют политическим эмигрантом а не комиком",
-  "Egor Kreed: позиционировал себя как серьёзный рэпер, стал попсой для подростков, обижается когда это говорят",
-  "Эльдар Джарахов: из топового блогера пытался стать рэпером — не взлетело, вернулся в блогинг",
-  "renatko: живёт на донаты годами, называет это независимостью",
-  "RavshanN (Равшан): узбекский блогер с миллионами подписчиков, снимает контент о простой жизни и деньгах, один из самых быстрорастущих СНГ блогеров 2024-2025",
-  "Иван Золо: в декабре 2025 получил приз Человек-мем года на SLAY 2025, стал вирусным мемом рунета",
-  "Samvel Steel (Стил): мотивационный спикер и бизнес-блогер, продаёт курсы по успеху и финансовой независимости",
+  "Данила Поперечный: уехал из России, стендап в эмиграции не взлетел как дома, снялся вместе с Моргенштерном в видео где они высмеивали патриотическую песню",
+  "Egor Kreed: позиционировал себя как серьёзный рэпер, стал попсой для подростков, обижается когда это говорят вслух",
+  "renatko: живёт на донаты подписчиков годами, называет это независимостью и свободой от работодателей",
+  "RavshanN: узбекский блогер который за 2024-2025 вырос до миллионов подписчиков на мотивационном контенте о простой жизни и деньгах, в декабре 2025 выиграл SLAY как лучший IRL-стример",
+  "Иван Золо: в декабре 2025 выиграл номинацию Человек-мем года на SLAY 2025, стал одним из самых быстрорастущих стримеров рунета 2025 года",
+  "Samvel Steel: мотивационный спикер и бизнес-блогер, продаёт курсы по успеху и финансовой независимости миллионам подписчиков",
+  "StRoGo: в декабре 2025 признан лучшим CS-стримером на SLAY 2025, но в медиа упоминается в основном в контексте конфликтов с другими стримерами а не за содержание стримов",
+  "Анар Абдуллаев: в декабре 2025 выиграл два SLAY подряд — прорыв года и лучший IRL-стример, вырос до миллионов подписчиков на мотивационном контенте"
 ];
 
 const EN_PERSONAS = [
-  "Dr Disrespect: banned from Twitch in 2020 and spent 4 years claiming he had no idea why — turned out he sent inappropriate messages to a minor, still has millions of subscribers",
-  "MrBeast: in 2024 a former employee accused him of grooming, his philanthropy videos were criticized for exploiting people as props without long-term help",
-  "Logan Paul: launched CryptoZoo NFT in 2021, raised millions, game never worked, Coffeezilla exposed him, Logan sued then quietly dropped the lawsuit",
-  "Jake Paul: fought 58-year-old Mike Tyson on Netflix in November 2024, both moved at walking pace, Netflix crashed, still got 60 million viewers",
-  "Andrew Tate: arrested in Romania in December 2022 on human trafficking charges, trial still ongoing in 2025, continues making content about being a persecuted alpha male",
-  "xQc: admitted losing millions gambling on his own stream, moved to Kick for gambling money, lost millions more while his audience cheered",
-  "Pokimane: announced retirement citing burnout in 2024, returned months later, career built on parasocial fans who believe she notices them personally",
+  "Dr Disrespect: banned from Twitch in June 2020 and spent 4 years claiming he had no idea why — in June 2024 it emerged he had sent inappropriate messages to a minor, still has millions of YouTube subscribers and never properly addressed it",
+  "MrBeast: in 2024 a former employee accused him of grooming, several collaborators distanced themselves. His philanthropy videos criticized for exploiting people as props without long-term help",
+  "Logan Paul: launched CryptoZoo NFT in 2021, raised millions from fans, game never worked. Coffeezilla exposed him in 2022. Logan sued Coffeezilla then quietly dropped the lawsuit after massive backlash",
+  "Jake Paul: fought 58-year-old Mike Tyson on Netflix in November 2024, both moved at walking pace for 8 rounds, Netflix servers crashed, still got 60 million viewers",
+  "Andrew Tate: arrested in Romania in December 2022 on human trafficking charges, trial still ongoing in 2025 while he continues making content about being a persecuted alpha male",
+  "xQc: admitted in 2023 to losing millions gambling on his own stream, moved to Kick for gambling money, lost millions more on stream while his audience cheered",
+  "Pokimane: announced retirement from streaming in 2024 citing burnout, returned months later, career built on parasocial fans who believe she notices them personally",
   "KSI: lost boxing rematch against Tommy Fury in 2023 and blamed judges, releases music calling himself multi-hyphenate, neither career is as good as he claims",
-  "Dream: built career hiding his face, face reveal in 2022 disappointed millions, accused of Minecraft speedrun cheating never cleanly resolved",
+  "Dream: built career hiding his face, face reveal in 2022 disappointed millions, accused of Minecraft speedrun cheating in 2020 never cleanly resolved",
   "Kai Cenat: organized giveaway in NYC in 2023 that turned into a riot, charged with inciting a riot, broke Twitch records the same year",
   "Ninja: dropped by Adidas in 2024, cried publicly, announced retirement then returned months later — has done this multiple times",
-  "Trisha Paytas: monetized every personal crisis and mental health breakdown into viral content, profited from every public meltdown"
+  "Trisha Paytas: monetized every personal crisis including breakdowns and relationship collapses into viral content, profited from every public meltdown"
 ];
 
 function pickRandom(arr) {
@@ -73,7 +76,6 @@ function addAnger(ip, amount) {
   angerByIP.set(ip, data);
 }
 
-// 0-100 anger scale mapped to level 1-5
 function angerLevelFromTotal(total) {
   if (total <= 0) return 1;
   if (total < 5) return 2;
@@ -84,14 +86,13 @@ function angerLevelFromTotal(total) {
 
 async function getWisdom(amount, lang, seed, type = 'paid') {
   const isRu = lang === 'ru';
-  const angerLevel = angerLevelFromTotal(amount);
 
   let system, prompt;
 
   if (type === 'free') {
     system = isRu
-      ? `Ты — древний суровый мудрец с чёрным юмором. Когда к тебе приходят без пожертвования, ты даёшь короткую горькую мудрость о том что бесплатный сыр бывает только в мышеловке, что скупость — это тоже черта характера которая многое говорит о человеке, и намекаешь что те кто жертвуют получают нечто особенное. Говори иронично, с сарказмом, но без прямых оскорблений. 1-2 предложения. Без предисловий.`
-      : `You are an ancient sage with dark humor. When someone comes without a donation, you give a short bitter wisdom about how free cheese only exists in mousetraps, how stinginess reveals character, and hint that those who donate receive something special. Speak ironically, with sarcasm, without direct insults. 1-2 sentences. No preamble.`;
+      ? `Ты — древний суровый мудрец с чёрным юмором. Когда к тебе приходят без пожертвования, ты даёшь короткую горькую мудрость о том что бесплатный сыр бывает только в мышеловке, что скупость — это тоже черта характера которая многое говорит о человеке, и намекаешь что те кто жертвуют получают нечто особенное. Говори иронично, с сарказмом. 1-2 предложения. Без предисловий.`
+      : `You are an ancient sage with dark humor. When someone comes without a donation, give a short bitter wisdom about how free cheese only exists in mousetraps, how stinginess reveals character, hint that those who donate receive something special. Speak ironically, with sarcasm. 1-2 sentences. No preamble.`;
     prompt = isRu ? 'Дай ироничную мудрость человеку который пришёл без пожертвования.' : 'Give ironic wisdom to someone who came without a donation.';
   } else if (type === 'daily') {
     system = isRu
@@ -104,10 +105,10 @@ async function getWisdom(amount, lang, seed, type = 'paid') {
       ? ['с матом и злостью', 'сухо и беспощадно', 'с иронией и презрением', 'издевательски спокойно']
       : ['with profanity and rage', 'dry and merciless', 'with cold irony', 'mockingly calm'];
     const tone = tones[Math.floor(Math.random() * tones.length)];
-
+    const angerLevel = angerLevelFromTotal(amount);
     const angerDesc = isRu
-      ? ['слегка недоволен', 'раздражён', 'разозлён', 'яростен', 'в абсолютной ярости — мудрость максимально мерзкая и беспощадная'][angerLevel - 1]
-      : ['slightly displeased', 'irritated', 'angered', 'furious', 'in absolute rage — wisdom is maximally vile and merciless'][angerLevel - 1];
+      ? ['слегка недоволен', 'раздражён', 'разозлён', 'яростен', 'в абсолютной ярости'][angerLevel - 1]
+      : ['slightly displeased', 'irritated', 'angered', 'furious', 'in absolute rage'][angerLevel - 1];
 
     system = isRu
       ? `Ты — древний озлобленный мудрец. Сейчас ты ${angerDesc}. Говоришь ${tone}. Каждая мудрость уникальна. Используй ТОЛЬКО реальный факт из контекста. Никаких предисловий. 1-2 предложения. Случайность: ${seed}`
@@ -145,14 +146,13 @@ async function getAudio(text) {
   } catch(e) { console.log('[TTS] exception:', e.message); return null; }
 }
 
-async function postToTelegram(text, label = '') {
+async function postToTelegram(text) {
   if (!TG_TOKEN) return;
   try {
-    const msg = label ? `${label}\n\n${text}` : text;
     await fetch(`https://api.telegram.org/bot${TG_TOKEN}/sendMessage`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ chat_id: TG_CHANNEL, text: msg, parse_mode: 'HTML' })
+      body: JSON.stringify({ chat_id: TG_CHANNEL, text, parse_mode: 'HTML' })
     });
   } catch(e) { console.log('[TG] error:', e.message); }
 }
@@ -162,20 +162,17 @@ async function sendDailyWisdom() {
   if (dailyWisdomSent.date === today && dailyWisdomSent.sent) return;
   const wisdom = await getWisdom(0, 'ru', 'daily', 'daily');
   if (wisdom) {
-    await postToTelegram(`🌑 <b>Мудрость дня</b>\n\n${wisdom}`, '');
+    await postToTelegram(`🌑 <b>Мудрость дня</b>\n\n${wisdom}`);
     dailyWisdomSent.date = today;
     dailyWisdomSent.sent = true;
   }
 }
 
-// Send daily wisdom at startup if not sent yet today
 sendDailyWisdom();
-// Check every hour
 setInterval(sendDailyWisdom, 60 * 60 * 1000);
 
 app.get('/health', (req, res) => res.json({ ok: true }));
 
-// Free wisdom endpoint
 app.post('/free-wisdom', async (req, res) => {
   const { lang } = req.body;
   const ip = req.headers['x-forwarded-for']?.split(',')[0] || req.socket.remoteAddress;
@@ -183,9 +180,7 @@ app.post('/free-wisdom', async (req, res) => {
   const data = freeByIP.get(ip) || { date: '', used: false };
 
   if (data.date === today && data.used) {
-    return res.status(429).json({ error: 'daily_limit', message: lang === 'ru'
-      ? 'Ты уже получил свою нищебродскую мудрость на сегодня. Возвращайся завтра или заплати.'
-      : 'You already got your cheapskate wisdom today. Come back tomorrow or pay.' });
+    return res.status(429).json({ error: 'daily_limit' });
   }
 
   const wisdom = await getWisdom(0, lang, '', 'free');
@@ -193,16 +188,12 @@ app.post('/free-wisdom', async (req, res) => {
 
   freeByIP.set(ip, { date: today, used: true });
 
-  const label = lang === 'ru'
-    ? '🪙 <b>Нищебродская мудрость</b>'
-    : '🪙 <b>Cheapskate wisdom</b>';
+  const label = lang === 'ru' ? '🪙 <b>Нищебродская мудрость</b>' : '🪙 <b>Cheapskate wisdom</b>';
   await postToTelegram(`${label}\n\n${wisdom}`);
 
-  // No audio for free tier
   res.json({ wisdom, free: true });
 });
 
-// Paid wisdom endpoint
 app.post('/wisdom', async (req, res) => {
   const { txid, lang } = req.body;
   const ip = req.headers['x-forwarded-for']?.split(',')[0] || req.socket.remoteAddress;
@@ -210,7 +201,6 @@ app.post('/wisdom', async (req, res) => {
 
   const seed = Date.now().toString(36) + Math.random().toString(36).substring(2, 6);
 
-  // Test mode
   if (txid === process.env.TEST_PASSWORD) {
     const anger = getAngerLevel(ip, 1);
     const angerLevel = angerLevelFromTotal(anger);
@@ -218,7 +208,8 @@ app.post('/wisdom', async (req, res) => {
     if (!wisdom) return res.status(500).json({ error: 'ai_failed' });
     const audio = await getAudio(wisdom);
     addAnger(ip, 1);
-    await postToTelegram(`🔥 <b>Мудрость мудреца</b>\n\n${wisdom}\n\n<i>— пожертвование: 1 USDT</i>`);
+    const emoji = ['😤', '😠', '🔥', '💀', '☠️'][angerLevel - 1];
+    await postToTelegram(`${emoji} <b>Мудрость мудреца</b>\n\n${wisdom}\n\n<i>— пожертвование: 1 USDT</i>`);
     return res.json({ wisdom, amount: 1.0, audio, angerLevel });
   }
 
@@ -240,17 +231,13 @@ app.post('/wisdom', async (req, res) => {
 
     const angerTotal = getAngerLevel(ip, amount);
     const angerLevel = angerLevelFromTotal(angerTotal);
-
     const wisdom = await getWisdom(amount, lang, seed, 'paid');
     if (!wisdom) return res.status(500).json({ error: 'ai_failed' });
     const audio = await getAudio(wisdom);
-
     usedTxids.add(txid);
     addAnger(ip, amount);
-
     const emoji = ['😤', '😠', '🔥', '💀', '☠️'][angerLevel - 1];
     await postToTelegram(`${emoji} <b>Мудрость мудреца</b>\n\n${wisdom}\n\n<i>— пожертвование: ${amount.toFixed(1)} USDT</i>`);
-
     res.json({ wisdom, amount, audio, angerLevel });
   } catch(e) {
     console.error(e);
