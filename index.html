@@ -93,6 +93,17 @@
   .tg-link { display: block; text-align: center; font-family:'VT323',monospace; font-size:16px; color:#5a7a5a; margin-top: 16px; text-decoration: none; }
   .tg-link:hover { color: #7ab07a; }
   .footer { margin-top:40px; font-family:'VT323',monospace; font-size:14px; color:#3a3020; text-align:center; z-index:1; }
+  .wisdom-video-modal { display:none; position:fixed; inset:0; z-index:999; background:rgba(0,0,0,0.92); align-items:center; justify-content:center; flex-direction:column; }
+  .wisdom-video-modal.active { display:flex; }
+  .wv-frame { position:relative; width:320px; border:3px solid #c8a84b; box-shadow:0 0 40px rgba(200,168,75,0.3); background:#0a0a0a; }
+  .wv-portrait { width:320px; height:320px; object-fit:cover; image-rendering:pixelated; display:block; }
+  .wv-scanlines { position:absolute; top:0; left:0; width:320px; height:320px; background:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,0,0,0.12) 3px,rgba(0,0,0,0.12) 4px); pointer-events:none; }
+  .wv-mouth { position:absolute; bottom:28px; left:50%; transform:translateX(-50%); display:flex; gap:3px; align-items:flex-end; height:20px; }
+  .wv-bar { width:8px; background:#c8a84b; min-height:3px; }
+  .wv-subtitles { background:#0a0a0a; border-top:2px solid #c8a84b; padding:14px 16px; min-height:70px; font-family:'VT323',monospace; font-size:18px; color:#e8c878; line-height:1.45; text-align:center; }
+  .wv-name { font-size:10px; color:#c8a84b; letter-spacing:2px; font-family:'Press Start 2P',monospace; text-align:center; padding:10px 0 0; }
+  .wv-close { position:absolute; top:10px; right:10px; background:#0a0a0a; border:2px solid #c8a84b; color:#c8a84b; font-family:'Press Start 2P',monospace; font-size:8px; padding:6px 10px; cursor:pointer; z-index:10; }
+  .wv-close:hover { background:#c8a84b; color:#0a0a0a; }
 </style>
 </head>
 <body>
@@ -152,13 +163,38 @@
 
 <div class="footer" id="t-footer"></div>
 
+<div class="wisdom-video-modal" id="wisdomModal">
+  <div class="wv-frame">
+    <button class="wv-close" onclick="closeWisdomModal()">✕ ЗАКРЫТЬ</button>
+    <img class="wv-portrait" id="wvPortrait" src="" alt="" />
+    <div class="wv-scanlines"></div>
+    <div class="wv-mouth" id="wvMouth">
+      <div class="wv-bar" id="mb0" style="height:4px"></div>
+      <div class="wv-bar" id="mb1" style="height:8px"></div>
+      <div class="wv-bar" id="mb2" style="height:14px"></div>
+      <div class="wv-bar" id="mb3" style="height:10px"></div>
+      <div class="wv-bar" id="mb4" style="height:6px"></div>
+      <div class="wv-bar" id="mb5" style="height:12px"></div>
+      <div class="wv-bar" id="mb6" style="height:4px"></div>
+    </div>
+    <div class="wv-subtitles" id="wvSubtitles"></div>
+  </div>
+  <div class="wv-name" id="wvName"></div>
+</div>
+
 <script>
 const BACKEND = 'https://sage-production-6a45.up.railway.app';
 const WALLET = 'TNnCZrgSQwEgWKViC1eci2MxCMdsoqTWVu';
+const PERSONAS_BASE = 'https://raw.githubusercontent.com/userkeeper/sage/main/personas/';
+const MUDRETS_IMG = PERSONAS_BASE + 'mudrets.png';
 let lang = 'ru';
 let currentWisdom = '';
 let currentAudio = null;
 let currentAngerLevel = 1;
+let mouthAnimFrame = null;
+let mouthActive = false;
+let currentPersonaId = null;
+let currentPersonaName = null;
 
 const T = {
   ru: {
@@ -275,29 +311,60 @@ function animateEye() {
 }
 animateEye();
 
+/* === Wisdom Video Modal === */
+function openWisdomModal(portraitUrl, name, wisdom, audioBase64) {
+  const modal = document.getElementById('wisdomModal');
+  document.getElementById('wvPortrait').src = portraitUrl;
+  document.getElementById('wvName').textContent = name ? '— ' + name.toUpperCase() + ' —' : '';
+  document.getElementById('wvSubtitles').textContent = '';
+  modal.classList.add('active');
+  startMouthAnim();
+  typeSubtitles(wisdom);
+  if (audioBase64) {
+    const audio = new Audio('data:audio/mpeg;base64,' + audioBase64);
+    audio.onended = () => { mouthActive = false; };
+    audio.play();
+  }
+}
+
+function closeWisdomModal() {
+  document.getElementById('wisdomModal').classList.remove('active');
+  mouthActive = false;
+}
+
+function startMouthAnim() {
+  mouthActive = true;
+  const bars = [0,1,2,3,4,5,6].map(i => document.getElementById('mb'+i));
+  function anim() {
+    if (!mouthActive) { bars.forEach(b => b.style.height = '3px'); return; }
+    bars.forEach(b => {
+      const h = Math.floor(Math.random() * 16) + 3;
+      b.style.height = h + 'px';
+    });
+    setTimeout(() => requestAnimationFrame(anim), 80);
+  }
+  anim();
+}
+
+function typeSubtitles(text) {
+  const el = document.getElementById('wvSubtitles');
+  el.textContent = '';
+  let i = 0;
+  const interval = setInterval(() => {
+    el.textContent += text[i];
+    i++;
+    if (i >= text.length) clearInterval(interval);
+  }, 38);
+}
+
 /* === Audio === */
 function speakWisdom() {
-  if (currentAudio) {
-    const audio = new Audio(`data:audio/mpeg;base64,${currentAudio}`);
-    audio.play();
-    return;
-  }
-  if (!currentWisdom) return;
-  window.speechSynthesis.cancel();
-  const utter = new SpeechSynthesisUtterance(currentWisdom);
-  utter.lang = T[lang].voiceLang;
-  utter.rate = 0.78; utter.pitch = 0.4;
-  const voices = window.speechSynthesis.getVoices();
-  const maleKw = ['male','man','yuri','dmitri','viktor','pavel','daniel','alex','fred','ralph'];
-  const langVoices = voices.filter(v => v.lang.startsWith(T[lang].voiceLang.split('-')[0]));
-  const maleVoice = langVoices.find(v => maleKw.some(k => v.name.toLowerCase().includes(k)));
-  if (maleVoice) utter.voice = maleVoice;
-  else if (langVoices[0]) utter.voice = langVoices[0];
-  window.speechSynthesis.speak(utter);
+  const portraitUrl = currentPersonaId ? PERSONAS_BASE + currentPersonaId + '.png' : MUDRETS_IMG;
+  const name = currentPersonaName || 'Мудрец Пустоты';
+  openWisdomModal(portraitUrl, name, currentWisdom, currentAudio);
 }
 
 /* === Persona Switch Animation === */
-const PERSONAS_BASE = 'https://raw.githubusercontent.com/userkeeper/sage/main/personas/';
 let personaSwitchTimer = null;
 
 function showPersona(personaId, personaName) {
@@ -421,6 +488,8 @@ async function verify() {
     usedTxids.add(txid);
     currentWisdom = data.wisdom;
     currentAudio = data.audio || null;
+    currentPersonaId = data.personaId || null;
+    currentPersonaName = data.personaName || null;
     updateAngerUI(data.angerLevel || 1);
 
     if (data.personaId) showPersona(data.personaId, data.personaName);
@@ -434,7 +503,7 @@ async function verify() {
     document.getElementById('speakBtn').style.display = 'block';
     bubble.textContent = data.wisdom.substring(0, 60) + (data.wisdom.length > 60 ? '...' : '');
 
-    setTimeout(() => speakWisdom(), 600);
+    setTimeout(() => speakWisdom(), 800);
 
   } catch(e) {
     status.className = 'status error';
