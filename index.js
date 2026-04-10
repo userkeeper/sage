@@ -222,18 +222,50 @@ async function generateAndSendVideo(wisdomText, personaId, personaName, audioBas
 async function sendVideoToTelegram(videoPath, caption, personaName) {
   if (!TG_TOKEN) return;
   try {
-    const FormData = require('form-data');
-    const form = new FormData();
-    form.append('chat_id', TG_VIDEO_CHANNEL);
-    form.append('video', fs.createReadStream(videoPath), { filename: 'wisdom.mp4' });
-    form.append('caption', caption);
-    form.append('supports_streaming', 'true');
-    await fetch(`https://api.telegram.org/bot${TG_TOKEN}/sendVideo`, {
+    const boundary = '----MudretsBoundary' + Date.now().toString(36);
+    const videoBuffer = fs.readFileSync(videoPath);
+    const captionText = caption.substring(0, 1024);
+
+    const parts = [];
+
+    // chat_id
+    parts.push(
+      `--${boundary}\r\nContent-Disposition: form-data; name="chat_id"\r\n\r\n${TG_VIDEO_CHANNEL}`
+    );
+    // caption
+    parts.push(
+      `--${boundary}\r\nContent-Disposition: form-data; name="caption"\r\n\r\n${captionText}`
+    );
+    // supports_streaming
+    parts.push(
+      `--${boundary}\r\nContent-Disposition: form-data; name="supports_streaming"\r\n\r\ntrue`
+    );
+    // video file
+    const fileHeader = `--${boundary}\r\nContent-Disposition: form-data; name="video"; filename="wisdom.mp4"\r\nContent-Type: video/mp4\r\n\r\n`;
+
+    const closing = `\r\n--${boundary}--\r\n`;
+
+    const body = Buffer.concat([
+      Buffer.from(parts.join('\r\n') + '\r\n', 'utf8'),
+      Buffer.from(fileHeader, 'utf8'),
+      videoBuffer,
+      Buffer.from(closing, 'utf8')
+    ]);
+
+    const res = await fetch(`https://api.telegram.org/bot${TG_TOKEN}/sendVideo`, {
       method: 'POST',
-      body: form,
-      headers: form.getHeaders()
+      headers: {
+        'Content-Type': `multipart/form-data; boundary=${boundary}`,
+        'Content-Length': body.length
+      },
+      body
     });
-    console.log('[VIDEO] sent to', TG_VIDEO_CHANNEL);
+    const result = await res.json();
+    if (result.ok) {
+      console.log('[VIDEO] sent to', TG_VIDEO_CHANNEL);
+    } else {
+      console.error('[VIDEO TG] failed:', JSON.stringify(result));
+    }
   } catch(e) { console.error('[VIDEO TG] error:', e.message); }
 }
 

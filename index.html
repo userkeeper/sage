@@ -399,6 +399,7 @@ function typeSubtitles(text) {
   const interval = setInterval(() => {
     el.textContent += text[i];
     i++;
+    el.scrollTop = el.scrollHeight;
     if (i >= text.length) clearInterval(interval);
   }, 35);
 }
