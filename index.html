@@ -93,17 +93,27 @@
   .tg-link { display: block; text-align: center; font-family:'VT323',monospace; font-size:16px; color:#5a7a5a; margin-top: 16px; text-decoration: none; }
   .tg-link:hover { color: #7ab07a; }
   .footer { margin-top:40px; font-family:'VT323',monospace; font-size:14px; color:#3a3020; text-align:center; z-index:1; }
-  .wisdom-video-modal { display:none; position:fixed; inset:0; z-index:999; background:rgba(0,0,0,0.92); align-items:center; justify-content:center; flex-direction:column; }
+  .wisdom-video-modal { display:none; position:fixed; inset:0; z-index:999; background:rgba(0,0,0,0.95); align-items:center; justify-content:center; flex-direction:column; gap:12px; }
   .wisdom-video-modal.active { display:flex; }
-  .wv-frame { position:relative; width:320px; border:3px solid #c8a84b; box-shadow:0 0 40px rgba(200,168,75,0.3); background:#0a0a0a; }
-  .wv-portrait { width:320px; height:320px; object-fit:cover; image-rendering:pixelated; display:block; }
-  .wv-scanlines { position:absolute; top:0; left:0; width:320px; height:320px; background:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,0,0,0.12) 3px,rgba(0,0,0,0.12) 4px); pointer-events:none; }
-  .wv-mouth { position:absolute; bottom:28px; left:50%; transform:translateX(-50%); display:flex; gap:3px; align-items:flex-end; height:20px; }
-  .wv-bar { width:8px; background:#c8a84b; min-height:3px; }
-  .wv-subtitles { background:#0a0a0a; border-top:2px solid #c8a84b; padding:14px 16px; min-height:70px; font-family:'VT323',monospace; font-size:18px; color:#e8c878; line-height:1.45; text-align:center; }
-  .wv-name { font-size:10px; color:#c8a84b; letter-spacing:2px; font-family:'Press Start 2P',monospace; text-align:center; padding:10px 0 0; }
-  .wv-close { position:absolute; top:10px; right:10px; background:#0a0a0a; border:2px solid #c8a84b; color:#c8a84b; font-family:'Press Start 2P',monospace; font-size:8px; padding:6px 10px; cursor:pointer; z-index:10; }
-  .wv-close:hover { background:#c8a84b; color:#0a0a0a; }
+  .wv-frame {
+    position:relative; width:320px; height:569px;
+    border:3px solid #c8a84b; box-shadow:0 0 40px rgba(200,168,75,0.25);
+    background:#08080f; display:flex; flex-direction:column; overflow:hidden;
+  }
+  .wv-portrait { width:320px; height:320px; object-fit:cover; image-rendering:pixelated; flex-shrink:0; }
+  .wv-scanlines { position:absolute; inset:0; background:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,0,0,0.1) 3px,rgba(0,0,0,0.1) 4px); pointer-events:none; z-index:2; }
+  .wv-bottom { display:flex; flex-direction:column; flex:1; padding:10px 14px 12px; gap:8px; }
+  .wv-name { font-size:8px; color:#c8a84b; letter-spacing:2px; font-family:'Press Start 2P',monospace; text-align:center; }
+  .wv-equalizer { display:flex; align-items:flex-end; justify-content:center; gap:4px; height:32px; flex-shrink:0; }
+  .wv-bar { width:7px; background:#c8a84b; min-height:3px; border-radius:1px 1px 0 0; transition:height 0.08s; }
+  .wv-subtitles { font-family:'VT323',monospace; font-size:17px; color:#e8c878; line-height:1.5; text-align:center; flex:1; display:flex; align-items:center; justify-content:center; }
+  .wv-footer { font-family:'VT323',monospace; font-size:12px; color:#3a3020; text-align:center; }
+  .wv-actions { display:flex; gap:8px; width:320px; }
+  .wv-close { flex:1; background:#0a0a0a; border:2px solid #5a5040; color:#7a7060; font-family:'Press Start 2P',monospace; font-size:7px; padding:10px; cursor:pointer; }
+  .wv-close:hover { border-color:#c8a84b; color:#c8a84b; }
+  .wv-save { flex:1; background:#c8a84b; border:none; color:#0a0a0a; font-family:'Press Start 2P',monospace; font-size:7px; padding:10px; cursor:pointer; box-shadow:3px 3px 0 #6a5820; }
+  .wv-save:hover { transform:translate(-1px,-1px); box-shadow:4px 4px 0 #6a5820; }
+  .wv-save:disabled { background:#3a3020; color:#6a6050; box-shadow:none; cursor:default; transform:none; }
 </style>
 </head>
 <body>
@@ -164,22 +174,31 @@
 <div class="footer" id="t-footer"></div>
 
 <div class="wisdom-video-modal" id="wisdomModal">
-  <div class="wv-frame">
-    <button class="wv-close" onclick="closeWisdomModal()">✕ ЗАКРЫТЬ</button>
+  <div class="wv-frame" id="wvFrame">
     <img class="wv-portrait" id="wvPortrait" src="" alt="" />
     <div class="wv-scanlines"></div>
-    <div class="wv-mouth" id="wvMouth">
-      <div class="wv-bar" id="mb0" style="height:4px"></div>
-      <div class="wv-bar" id="mb1" style="height:8px"></div>
-      <div class="wv-bar" id="mb2" style="height:14px"></div>
-      <div class="wv-bar" id="mb3" style="height:10px"></div>
-      <div class="wv-bar" id="mb4" style="height:6px"></div>
-      <div class="wv-bar" id="mb5" style="height:12px"></div>
-      <div class="wv-bar" id="mb6" style="height:4px"></div>
+    <div class="wv-bottom">
+      <div class="wv-name" id="wvName"></div>
+      <div class="wv-equalizer" id="wvEq">
+        <div class="wv-bar" id="mb0" style="height:3px"></div>
+        <div class="wv-bar" id="mb1" style="height:3px"></div>
+        <div class="wv-bar" id="mb2" style="height:3px"></div>
+        <div class="wv-bar" id="mb3" style="height:3px"></div>
+        <div class="wv-bar" id="mb4" style="height:3px"></div>
+        <div class="wv-bar" id="mb5" style="height:3px"></div>
+        <div class="wv-bar" id="mb6" style="height:3px"></div>
+        <div class="wv-bar" id="mb7" style="height:3px"></div>
+        <div class="wv-bar" id="mb8" style="height:3px"></div>
+        <div class="wv-bar" id="mb9" style="height:3px"></div>
+      </div>
+      <div class="wv-subtitles" id="wvSubtitles"></div>
+      <div class="wv-footer">mudrets.online</div>
     </div>
-    <div class="wv-subtitles" id="wvSubtitles"></div>
   </div>
-  <div class="wv-name" id="wvName"></div>
+  <div class="wv-actions">
+    <button class="wv-close" onclick="closeWisdomModal()">✕ ЗАКРЫТЬ</button>
+    <button class="wv-save" id="wvSaveBtn" onclick="saveAsTikTok()">⬇ СКАЧАТЬ MP4</button>
+  </div>
 </div>
 
 <script>
@@ -312,38 +331,61 @@ function animateEye() {
 animateEye();
 
 /* === Wisdom Video Modal === */
+let mouthActive = false;
+let mouthTimer = null;
+let currentPortraitUrl = MUDRETS_IMG;
+let currentAudioObj = null;
+
 function openWisdomModal(portraitUrl, name, wisdom, audioBase64) {
+  currentPortraitUrl = portraitUrl;
   const modal = document.getElementById('wisdomModal');
   document.getElementById('wvPortrait').src = portraitUrl;
-  document.getElementById('wvName').textContent = name ? '— ' + name.toUpperCase() + ' —' : '';
+  document.getElementById('wvName').textContent = name ? '— ' + name.toUpperCase() + ' —' : '— МУДРЕЦ ПУСТОТЫ —';
   document.getElementById('wvSubtitles').textContent = '';
+  document.getElementById('wvSaveBtn').disabled = true;
+  document.getElementById('wvSaveBtn').textContent = '⬇ СКАЧАТЬ MP4';
   modal.classList.add('active');
-  startMouthAnim();
-  typeSubtitles(wisdom);
+
   if (audioBase64) {
-    const audio = new Audio('data:audio/mpeg;base64,' + audioBase64);
-    audio.onended = () => { mouthActive = false; };
-    audio.play();
+    currentAudioObj = new Audio('data:audio/mpeg;base64,' + audioBase64);
+    currentAudioObj.onplay = () => { mouthActive = true; animateMouth(); };
+    currentAudioObj.onended = () => {
+      mouthActive = false;
+      resetBars();
+      document.getElementById('wvSaveBtn').disabled = false;
+    };
+    currentAudioObj.play();
+  } else {
+    mouthActive = false;
   }
+
+  typeSubtitles(wisdom);
 }
 
 function closeWisdomModal() {
   document.getElementById('wisdomModal').classList.remove('active');
   mouthActive = false;
+  if (currentAudioObj) { currentAudioObj.pause(); currentAudioObj = null; }
+  clearTimeout(mouthTimer);
+  resetBars();
 }
 
-function startMouthAnim() {
-  mouthActive = true;
-  const bars = [0,1,2,3,4,5,6].map(i => document.getElementById('mb'+i));
-  function anim() {
-    if (!mouthActive) { bars.forEach(b => b.style.height = '3px'); return; }
-    bars.forEach(b => {
-      const h = Math.floor(Math.random() * 16) + 3;
-      b.style.height = h + 'px';
-    });
-    setTimeout(() => requestAnimationFrame(anim), 80);
+function resetBars() {
+  for (let i = 0; i < 10; i++) {
+    const b = document.getElementById('mb'+i);
+    if (b) b.style.height = '3px';
   }
-  anim();
+}
+
+function animateMouth() {
+  if (!mouthActive) { resetBars(); return; }
+  for (let i = 0; i < 10; i++) {
+    const b = document.getElementById('mb'+i);
+    if (!b) continue;
+    const h = Math.floor(Math.random() * 26) + 3;
+    b.style.height = h + 'px';
+  }
+  mouthTimer = setTimeout(() => requestAnimationFrame(animateMouth), 90);
 }
 
 function typeSubtitles(text) {
@@ -354,14 +396,134 @@ function typeSubtitles(text) {
     el.textContent += text[i];
     i++;
     if (i >= text.length) clearInterval(interval);
-  }, 38);
+  }, 35);
 }
 
-/* === Audio === */
-function speakWisdom() {
-  const portraitUrl = currentPersonaId ? PERSONAS_BASE + currentPersonaId + '.png' : MUDRETS_IMG;
-  const name = currentPersonaName || 'Мудрец Пустоты';
-  openWisdomModal(portraitUrl, name, currentWisdom, currentAudio);
+/* === TikTok Export === */
+async function saveAsTikTok() {
+  const btn = document.getElementById('wvSaveBtn');
+  btn.disabled = true;
+  btn.textContent = '⏳ РЕНДЕР...';
+
+  const W = 1080, H = 1920;
+  const canvas = document.createElement('canvas');
+  canvas.width = W; canvas.height = H;
+  const ctx = canvas.getContext('2d');
+
+  const img = new Image();
+  img.crossOrigin = 'anonymous';
+  img.src = currentPortraitUrl;
+  await new Promise(r => { img.onload = r; img.onerror = r; });
+
+  const wisdom = document.getElementById('wvSubtitles').textContent;
+  const name = document.getElementById('wvName').textContent;
+
+  const stream = canvas.captureStream(30);
+  const audioBase64 = currentAudio;
+  let audioTrack = null;
+
+  if (audioBase64) {
+    try {
+      const audioCtx = new AudioContext();
+      const binary = atob(audioBase64);
+      const bytes = new Uint8Array(binary.length);
+      for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+      const audioBuffer = await audioCtx.decodeAudioData(bytes.buffer);
+      const dest = audioCtx.createMediaStreamDestination();
+      const src = audioCtx.createBufferSource();
+      src.buffer = audioBuffer;
+      src.connect(dest);
+      src.start();
+      audioTrack = dest.stream.getAudioTracks()[0];
+      if (audioTrack) stream.addTrack(audioTrack);
+    } catch(e) { console.log('audio track error', e); }
+  }
+
+  const recorder = new MediaRecorder(stream, { mimeType: 'video/webm;codecs=vp8' });
+  const chunks = [];
+  recorder.ondataavailable = e => { if (e.data.size > 0) chunks.push(e.data); };
+
+  const duration = audioBase64 ? Math.ceil(wisdom.length * 0.038 * 1000) + 1500 : 5000;
+
+  recorder.start();
+
+  let startTime = null;
+  let charIdx = 0;
+
+  function renderFrame(ts) {
+    if (!startTime) startTime = ts;
+    const elapsed = ts - startTime;
+    const progress = Math.min(elapsed / duration, 1);
+
+    ctx.fillStyle = '#08080f';
+    ctx.fillRect(0, 0, W, H);
+
+    ctx.drawImage(img, 0, 0, W, W);
+
+    for (let y = 0; y < W; y += 4) {
+      ctx.fillStyle = 'rgba(0,0,0,0.1)';
+      ctx.fillRect(0, y, W, 1);
+    }
+
+    const borderColor = '#c8a84b';
+    ctx.strokeStyle = borderColor;
+    ctx.lineWidth = 8;
+    ctx.strokeRect(4, 4, W-8, H-8);
+
+    ctx.fillStyle = '#c8a84b';
+    ctx.font = 'bold 36px monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText(name, W/2, W + 70);
+
+    const eqY = W + 110;
+    const bars = 20;
+    const barW = 28, gap = 12;
+    const totalW = bars * (barW + gap);
+    const startX = (W - totalW) / 2;
+    for (let i = 0; i < bars; i++) {
+      const h = mouthActive ? (Math.random() * 60 + 8) : 8;
+      ctx.fillStyle = '#c8a84b';
+      ctx.fillRect(startX + i * (barW + gap), eqY + 60 - h, barW, h);
+    }
+
+    charIdx = Math.min(Math.floor(progress * wisdom.length * 1.2), wisdom.length);
+    const displayText = wisdom.substring(0, charIdx);
+
+    ctx.fillStyle = '#e8c878';
+    ctx.font = '48px serif';
+    ctx.textAlign = 'center';
+    const words = displayText.split(' ');
+    let line = '', lines = [], maxW = W - 120;
+    for (const word of words) {
+      const test = line + word + ' ';
+      if (ctx.measureText(test).width > maxW && line) { lines.push(line.trim()); line = word + ' '; }
+      else line = test;
+    }
+    if (line.trim()) lines.push(line.trim());
+    const textStartY = eqY + 100;
+    lines.forEach((l, i) => ctx.fillText(l, W/2, textStartY + i * 60));
+
+    ctx.fillStyle = '#3a3020';
+    ctx.font = '32px monospace';
+    ctx.fillText('mudrets.online', W/2, H - 60);
+
+    if (elapsed < duration) requestAnimationFrame(renderFrame);
+    else recorder.stop();
+  }
+
+  requestAnimationFrame(renderFrame);
+
+  recorder.onstop = () => {
+    const blob = new Blob(chunks, { type: 'video/webm' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'mudrets_wisdom.webm';
+    a.click();
+    URL.revokeObjectURL(url);
+    btn.disabled = false;
+    btn.textContent = '⬇ СКАЧАТЬ MP4';
+  };
 }
 
 /* === Persona Switch Animation === */
@@ -396,7 +558,12 @@ function hidePersoma() {
   sageImg.style.opacity = '1';
 }
 
-/* === Free Wisdom === */
+/* === Audio === */
+function speakWisdom() {
+  const portraitUrl = currentPersonaId ? PERSONAS_BASE + currentPersonaId + '.png' : MUDRETS_IMG;
+  const name = currentPersonaName || 'Мудрец Пустоты';
+  openWisdomModal(portraitUrl, name, currentWisdom, currentAudio);
+}
 async function getFreeWisdom() {
   const t = T[lang];
   const btn = document.getElementById('freeBtn');

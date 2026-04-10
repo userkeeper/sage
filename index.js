@@ -1,6 +1,10 @@
 const express = require('express');
 const fetch = require('node-fetch');
 const cors = require('cors');
+const { execSync, exec } = require('child_process');
+const fs = require('fs');
+const path = require('path');
+const os = require('os');
 
 const app = express();
 app.use(cors());
@@ -11,6 +15,7 @@ const ANTHROPIC_KEY = process.env.ANTHROPIC_API_KEY;
 const OPENAI_KEY = process.env.OPENAI_API_KEY;
 const TG_TOKEN = process.env.TG_BOT_TOKEN;
 const TG_CHANNEL = process.env.TG_CHANNEL || '@mudrets_on';
+const TG_VIDEO_CHANNEL = process.env.TG_VIDEO_CHANNEL || TG_CHANNEL;
 
 const usedTxids = new Set();
 const freeByIP = new Map();
@@ -149,6 +154,88 @@ async function getAudio(text) {
 const GITHUB_PERSONAS = 'https://raw.githubusercontent.com/userkeeper/sage/main/personas/';
 const MUDRETS_IMG = GITHUB_PERSONAS + 'mudrets.png';
 
+async function downloadImage(url, destPath) {
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`Failed to download ${url}`);
+  const buf = await res.buffer();
+  fs.writeFileSync(destPath, buf);
+}
+
+async function generateAndSendVideo(wisdomText, personaId, personaName, audioBase64) {
+  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'mudrets-'));
+  try {
+    const personaImgUrl = personaId ? GITHUB_PERSONAS + personaId + '.png' : MUDRETS_IMG;
+    const portraitPath = path.join(tmpDir, 'portrait.png');
+    await downloadImage(personaImgUrl, portraitPath);
+
+    // Generate 30 frames (1 second static + animated eq bars)
+    const fps = 30;
+    const audioDuration = audioBase64 ? Math.ceil(wisdomText.length * 0.038) + 2 : 5;
+    const totalFrames = fps * audioDuration;
+    const framesDir = path.join(tmpDir, 'frames');
+    fs.mkdirSync(framesDir);
+
+    // Render frames with animated equalizer
+    for (let f = 0; f < totalFrames; f++) {
+      const bars = Array.from({length: 20}, () => Math.floor(Math.random() * 50) + 8);
+      const frameData = JSON.stringify({
+        persona_path: portraitPath,
+        wisdom_text: wisdomText,
+        persona_name: personaName || 'Мудрец Пустоты',
+        bar_heights: bars,
+        output_path: path.join(framesDir, `frame${String(f).padStart(5,'0')}.png`)
+      });
+      execSync(`python3 /app/render_frame.py '${frameData.replace(/'/g, '"')}'`);
+    }
+
+    // Audio file
+    let audioPath = null;
+    if (audioBase64) {
+      audioPath = path.join(tmpDir, 'audio.mp3');
+      fs.writeFileSync(audioPath, Buffer.from(audioBase64, 'base64'));
+    }
+
+    // Assemble video with ffmpeg
+    const videoPath = path.join(tmpDir, 'wisdom.mp4');
+    const audioArg = audioPath
+      ? `-i ${audioPath} -c:a aac -shortest`
+      : '-an';
+    execSync(
+      `ffmpeg -y -framerate ${fps} -i ${framesDir}/frame%05d.png ${audioPath ? `-i ${audioPath}` : ''} ` +
+      `-c:v libx264 -preset fast -crf 23 -pix_fmt yuv420p ` +
+      `${audioPath ? '-c:a aac -shortest' : '-an'} ` +
+      `${videoPath}`,
+      { timeout: 120000 }
+    );
+
+    // Send to video channel
+    await sendVideoToTelegram(videoPath, wisdomText, personaName);
+
+  } catch(e) {
+    console.error('[VIDEO] error:', e.message);
+  } finally {
+    try { fs.rmSync(tmpDir, { recursive: true }); } catch(e) {}
+  }
+}
+
+async function sendVideoToTelegram(videoPath, caption, personaName) {
+  if (!TG_TOKEN) return;
+  try {
+    const FormData = require('form-data');
+    const form = new FormData();
+    form.append('chat_id', TG_VIDEO_CHANNEL);
+    form.append('video', fs.createReadStream(videoPath), { filename: 'wisdom.mp4' });
+    form.append('caption', caption);
+    form.append('supports_streaming', 'true');
+    await fetch(`https://api.telegram.org/bot${TG_TOKEN}/sendVideo`, {
+      method: 'POST',
+      body: form,
+      headers: form.getHeaders()
+    });
+    console.log('[VIDEO] sent to', TG_VIDEO_CHANNEL);
+  } catch(e) { console.error('[VIDEO TG] error:', e.message); }
+}
+
 async function postToTelegram(text, photoUrl) {
   if (!TG_TOKEN) return;
   try {
@@ -174,6 +261,7 @@ async function sendDailyWisdom() {
   const result = await getWisdom(0, 'ru', 'daily', 'daily');
   if (result.text) {
     await postToTelegram(`🌑 <b>Мудрость дня</b>\n\n${result.text}`, MUDRETS_IMG);
+    generateAndSendVideo(result.text, null, 'Мудрец Пустоты', null);
     dailyWisdomSent.date = today;
     dailyWisdomSent.sent = true;
   }
@@ -201,6 +289,7 @@ app.post('/free-wisdom', async (req, res) => {
 
   const label = lang === 'ru' ? '🪙 <b>Нищебродская мудрость</b>' : '🪙 <b>Cheapskate wisdom</b>';
   await postToTelegram(`${label}\n\n${result.text}`, MUDRETS_IMG);
+  generateAndSendVideo(result.text, null, 'Мудрец Пустоты', null);
 
   res.json({ wisdom: result.text, free: true });
 });
@@ -223,6 +312,7 @@ app.post('/wisdom', async (req, res) => {
     const personaLine = result.personaName ? ` · ${result.personaName}` : '';
     const photoUrl = result.personaId ? GITHUB_PERSONAS + result.personaId + '.png' : MUDRETS_IMG;
     await postToTelegram(`${emoji} <b>Мудрость мудреца${personaLine}</b>\n\n${result.text}\n\n<i>— пожертвование: 1 USDT</i>`, photoUrl);
+    generateAndSendVideo(result.text, result.personaId, result.personaName, audio);
     return res.json({ wisdom: result.text, amount: 1.0, audio, angerLevel, personaId: result.personaId, personaName: result.personaName });
   }
 
@@ -253,6 +343,7 @@ app.post('/wisdom', async (req, res) => {
     const personaLine = result.personaName ? ` · ${result.personaName}` : '';
     const photoUrl = result.personaId ? GITHUB_PERSONAS + result.personaId + '.png' : MUDRETS_IMG;
     await postToTelegram(`${emoji} <b>Мудрость мудреца${personaLine}</b>\n\n${result.text}\n\n<i>— пожертвование: ${amount.toFixed(1)} USDT</i>`, photoUrl);
+    generateAndSendVideo(result.text, result.personaId, result.personaName, audio);
     res.json({ wisdom: result.text, amount, audio, angerLevel, personaId: result.personaId, personaName: result.personaName });
   } catch(e) {
     console.error(e);
