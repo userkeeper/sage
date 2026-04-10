@@ -161,69 +161,73 @@ async function downloadImage(url, destPath) {
   fs.writeFileSync(destPath, buf);
 }
 
+function execAsync(cmd, opts = {}) {
+  return new Promise((resolve, reject) => {
+    exec(cmd, { timeout: 120000, ...opts }, (err, stdout, stderr) => {
+      if (err) reject(new Error(stderr || err.message));
+      else resolve(stdout);
+    });
+  });
+}
+
 async function generateAndSendVideo(wisdomText, personaId, personaName, audioBase64) {
-  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'mudrets-'));
-  try {
-    const personaImgUrl = personaId ? GITHUB_PERSONAS + personaId + '.png' : MUDRETS_IMG;
-    const portraitPath = path.join(tmpDir, 'portrait.png');
-    await downloadImage(personaImgUrl, portraitPath);
+  setImmediate(async () => {
+    const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'mudrets-'));
+    try {
+      const personaImgUrl = personaId ? GITHUB_PERSONAS + personaId + '.png' : MUDRETS_IMG;
+      const portraitPath = path.join(tmpDir, 'portrait.png');
+      await downloadImage(personaImgUrl, portraitPath);
 
-    // Save audio first so we can get real duration
-    let audioPath = null;
-    let audioDuration = 6;
-    if (audioBase64) {
-      audioPath = path.join(tmpDir, 'audio.mp3');
-      fs.writeFileSync(audioPath, Buffer.from(audioBase64, 'base64'));
-      try {
-        const probe = execSync(
-          `ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "${audioPath}"`,
-          { timeout: 10000 }
-        ).toString().trim();
-        audioDuration = Math.ceil(parseFloat(probe)) + 1;
-      } catch(e) {
-        audioDuration = Math.ceil(wisdomText.length * 0.055) + 2;
+      let audioPath = null;
+      let audioDuration = 7;
+      if (audioBase64) {
+        audioPath = path.join(tmpDir, 'audio.mp3');
+        fs.writeFileSync(audioPath, Buffer.from(audioBase64, 'base64'));
+        try {
+          const probe = await execAsync(
+            `ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "${audioPath}"`
+          );
+          audioDuration = Math.ceil(parseFloat(probe.trim())) + 1;
+        } catch(e) {
+          audioDuration = Math.ceil(wisdomText.length * 0.055) + 2;
+        }
       }
-    }
 
-    const fps = 10;
-    const totalFrames = fps * audioDuration;
-    const framesDir = path.join(tmpDir, 'frames');
-    fs.mkdirSync(framesDir);
-    const scriptPath = path.join(__dirname, 'render_frame.js');
-
-    for (let f = 0; f < totalFrames; f++) {
-      const bars = Array.from({length: 20}, () => Math.floor(Math.random() * 50) + 8);
-      const frameData = {
+      // Render ONE static frame
+      const framePath = path.join(tmpDir, 'frame.png');
+      const scriptPath = path.join(__dirname, 'render_frame.js');
+      const frameData = JSON.stringify({
         persona_path: portraitPath,
         wisdom_text: wisdomText,
         persona_name: personaName || 'Мудрец Пустоты',
-        bar_heights: bars,
-        output_path: path.join(framesDir, `frame${String(f).padStart(5,'0')}.png`)
-      };
-      const frameJson = JSON.stringify(frameData);
-      execSync(`node "${scriptPath}" ${JSON.stringify(frameJson)}`, { timeout: 30000 });
+        bar_heights: Array(20).fill(18),
+        output_path: framePath
+      });
+      await execAsync(`node "${scriptPath}" ${JSON.stringify(frameData)}`);
+
+      // Loop single frame for full duration + add audio
+      const videoPath = path.join(tmpDir, 'wisdom.mp4');
+      const ffCmd = [
+        `ffmpeg -y`,
+        `-loop 1 -framerate 1 -i "${framePath}"`,
+        audioPath ? `-i "${audioPath}"` : '',
+        `-c:v libx264 -preset fast -crf 28 -pix_fmt yuv420p`,
+        `-t ${audioDuration}`,
+        audioPath ? `-c:a aac` : `-an`,
+        `"${videoPath}"`
+      ].filter(Boolean).join(' ');
+
+      await execAsync(ffCmd, { timeout: 120000 });
+      console.log(`[VIDEO] rendered ${audioDuration}s (static)`);
+
+      await sendVideoToTelegram(videoPath, wisdomText);
+
+    } catch(e) {
+      console.error('[VIDEO] error:', e.message);
+    } finally {
+      try { fs.rmSync(tmpDir, { recursive: true }); } catch(e) {}
     }
-
-    const videoPath = path.join(tmpDir, 'wisdom.mp4');
-    const ffCmd = [
-      `ffmpeg -y -framerate ${fps}`,
-      `-i "${framesDir}/frame%05d.png"`,
-      audioPath ? `-i "${audioPath}"` : '',
-      `-c:v libx264 -preset fast -crf 26 -pix_fmt yuv420p`,
-      audioPath ? `-c:a aac -t ${audioDuration}` : `-t ${audioDuration} -an`,
-      `"${videoPath}"`
-    ].filter(Boolean).join(' ');
-
-    execSync(ffCmd, { timeout: 300000 });
-    console.log(`[VIDEO] rendered ${audioDuration}s, sending...`);
-
-    await sendVideoToTelegram(videoPath, wisdomText);
-
-  } catch(e) {
-    console.error('[VIDEO] error:', e.message);
-  } finally {
-    try { fs.rmSync(tmpDir, { recursive: true }); } catch(e) {}
-  }
+  });
 }
 
 async function sendVideoToTelegram(videoPath, caption) {
