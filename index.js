@@ -168,15 +168,29 @@ async function generateAndSendVideo(wisdomText, personaId, personaName, audioBas
     const portraitPath = path.join(tmpDir, 'portrait.png');
     await downloadImage(personaImgUrl, portraitPath);
 
-    const fps = 15;
-    const audioDuration = audioBase64 ? Math.ceil(wisdomText.length * 0.042) + 2 : 5;
+    // Save audio first so we can get real duration
+    let audioPath = null;
+    let audioDuration = 6;
+    if (audioBase64) {
+      audioPath = path.join(tmpDir, 'audio.mp3');
+      fs.writeFileSync(audioPath, Buffer.from(audioBase64, 'base64'));
+      try {
+        const probe = execSync(
+          `ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "${audioPath}"`,
+          { timeout: 10000 }
+        ).toString().trim();
+        audioDuration = Math.ceil(parseFloat(probe)) + 1;
+      } catch(e) {
+        audioDuration = Math.ceil(wisdomText.length * 0.055) + 2;
+      }
+    }
+
+    const fps = 10;
     const totalFrames = fps * audioDuration;
     const framesDir = path.join(tmpDir, 'frames');
     fs.mkdirSync(framesDir);
-
     const scriptPath = path.join(__dirname, 'render_frame.py');
 
-    // Render unique frames (15fps * duration) with animated eq bars
     for (let f = 0; f < totalFrames; f++) {
       const bars = Array.from({length: 20}, () => Math.floor(Math.random() * 50) + 8);
       const frameData = {
@@ -190,27 +204,20 @@ async function generateAndSendVideo(wisdomText, personaId, personaName, audioBas
       execSync(`python3 "${scriptPath}" '${frameJson}'`, { timeout: 30000 });
     }
 
-    // Audio file
-    let audioPath = null;
-    if (audioBase64) {
-      audioPath = path.join(tmpDir, 'audio.mp3');
-      fs.writeFileSync(audioPath, Buffer.from(audioBase64, 'base64'));
-    }
-
-    // Assemble video
     const videoPath = path.join(tmpDir, 'wisdom.mp4');
     const ffCmd = [
       `ffmpeg -y -framerate ${fps}`,
       `-i "${framesDir}/frame%05d.png"`,
       audioPath ? `-i "${audioPath}"` : '',
       `-c:v libx264 -preset fast -crf 26 -pix_fmt yuv420p`,
-      audioPath ? '-c:a aac -shortest' : '-an',
+      audioPath ? `-c:a aac -t ${audioDuration}` : `-t ${audioDuration} -an`,
       `"${videoPath}"`
     ].filter(Boolean).join(' ');
 
-    execSync(ffCmd, { timeout: 180000 });
+    execSync(ffCmd, { timeout: 300000 });
+    console.log(`[VIDEO] rendered ${audioDuration}s, sending...`);
 
-    await sendVideoToTelegram(videoPath, wisdomText, personaName);
+    await sendVideoToTelegram(videoPath, wisdomText);
 
   } catch(e) {
     console.error('[VIDEO] error:', e.message);
@@ -219,44 +226,40 @@ async function generateAndSendVideo(wisdomText, personaId, personaName, audioBas
   }
 }
 
-async function sendVideoToTelegram(videoPath, caption, personaName) {
+async function sendVideoToTelegram(videoPath, caption) {
   if (!TG_TOKEN) return;
   try {
-    const boundary = '----MudretsBoundary' + Date.now().toString(36);
+    const boundary = 'MudretsBnd' + Date.now().toString(36);
+    const CRLF = '\r\n';
     const videoBuffer = fs.readFileSync(videoPath);
-    const captionText = caption.substring(0, 1024);
+    const captionText = (caption || '').substring(0, 1024);
 
-    const parts = [];
-
-    // chat_id
-    parts.push(
-      `--${boundary}\r\nContent-Disposition: form-data; name="chat_id"\r\n\r\n${TG_VIDEO_CHANNEL}`
+    const encodeField = (name, value) => Buffer.from(
+      `--${boundary}${CRLF}` +
+      `Content-Disposition: form-data; name="${name}"${CRLF}${CRLF}` +
+      `${value}${CRLF}`,
+      'utf8'
     );
-    // caption
-    parts.push(
-      `--${boundary}\r\nContent-Disposition: form-data; name="caption"\r\n\r\n${captionText}`
-    );
-    // supports_streaming
-    parts.push(
-      `--${boundary}\r\nContent-Disposition: form-data; name="supports_streaming"\r\n\r\ntrue`
-    );
-    // video file
-    const fileHeader = `--${boundary}\r\nContent-Disposition: form-data; name="video"; filename="wisdom.mp4"\r\nContent-Type: video/mp4\r\n\r\n`;
-
-    const closing = `\r\n--${boundary}--\r\n`;
 
     const body = Buffer.concat([
-      Buffer.from(parts.join('\r\n') + '\r\n', 'utf8'),
-      Buffer.from(fileHeader, 'utf8'),
+      encodeField('chat_id', TG_VIDEO_CHANNEL),
+      encodeField('caption', captionText),
+      encodeField('supports_streaming', 'true'),
+      Buffer.from(
+        `--${boundary}${CRLF}` +
+        `Content-Disposition: form-data; name="video"; filename="wisdom.mp4"${CRLF}` +
+        `Content-Type: video/mp4${CRLF}${CRLF}`,
+        'utf8'
+      ),
       videoBuffer,
-      Buffer.from(closing, 'utf8')
+      Buffer.from(`${CRLF}--${boundary}--${CRLF}`, 'utf8')
     ]);
 
     const res = await fetch(`https://api.telegram.org/bot${TG_TOKEN}/sendVideo`, {
       method: 'POST',
       headers: {
         'Content-Type': `multipart/form-data; boundary=${boundary}`,
-        'Content-Length': body.length
+        'Content-Length': String(body.length)
       },
       body
     });
