@@ -174,28 +174,33 @@ async function generateAndSendVideo(wisdomText, personaId, personaName, audioBas
   setImmediate(async () => {
     const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'mudrets-'));
     try {
+      console.log('[VIDEO] start, persona:', personaId || 'mudrets');
       const personaImgUrl = personaId ? GITHUB_PERSONAS + personaId + '.png' : MUDRETS_IMG;
       const portraitPath = path.join(tmpDir, 'portrait.png');
       await downloadImage(personaImgUrl, portraitPath);
+      console.log('[VIDEO] portrait downloaded:', portraitPath);
 
       let audioPath = null;
       let audioDuration = 7;
       if (audioBase64) {
         audioPath = path.join(tmpDir, 'audio.mp3');
         fs.writeFileSync(audioPath, Buffer.from(audioBase64, 'base64'));
+        console.log('[VIDEO] audio saved, size:', fs.statSync(audioPath).size);
         try {
           const probe = await execAsync(
             `ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "${audioPath}"`
           );
           audioDuration = Math.ceil(parseFloat(probe.trim())) + 1;
+          console.log('[VIDEO] audio duration:', audioDuration);
         } catch(e) {
           audioDuration = Math.ceil(wisdomText.length * 0.055) + 2;
+          console.log('[VIDEO] ffprobe failed:', e.message, '→ fallback duration:', audioDuration);
         }
       }
 
-      // Render ONE static frame
       const framePath = path.join(tmpDir, 'frame.png');
       const scriptPath = path.join(__dirname, 'render_frame.js');
+      console.log('[VIDEO] rendering frame, script:', scriptPath);
       const frameData = JSON.stringify({
         persona_path: portraitPath,
         wisdom_text: wisdomText,
@@ -204,8 +209,8 @@ async function generateAndSendVideo(wisdomText, personaId, personaName, audioBas
         output_path: framePath
       });
       await execAsync(`node "${scriptPath}" ${JSON.stringify(frameData)}`);
+      console.log('[VIDEO] frame rendered:', fs.statSync(framePath).size, 'bytes');
 
-      // Loop single frame for full duration + add audio with silence padding
       const videoPath = path.join(tmpDir, 'wisdom.mp4');
       const totalDuration = audioDuration + 1.5;
       const ffCmd = [
@@ -218,13 +223,14 @@ async function generateAndSendVideo(wisdomText, personaId, personaName, audioBas
         `"${videoPath}"`
       ].filter(Boolean).join(' ');
 
+      console.log('[VIDEO] ffmpeg cmd:', ffCmd);
       await execAsync(ffCmd, { timeout: 120000 });
-      console.log(`[VIDEO] rendered ${audioDuration}s (static)`);
+      console.log('[VIDEO] mp4 ready:', fs.statSync(videoPath).size, 'bytes');
 
       await sendVideoToTelegram(videoPath, wisdomText);
 
     } catch(e) {
-      console.error('[VIDEO] error:', e.message);
+      console.error('[VIDEO] FATAL error:', e.message);
     } finally {
       try { fs.rmSync(tmpDir, { recursive: true }); } catch(e) {}
     }
