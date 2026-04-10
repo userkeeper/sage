@@ -472,6 +472,7 @@ let currentAudio = null;
 let currentPersonaId = null;
 let history = [];
 
+function initPanel() {
 // Build persona grid
 const grid = document.getElementById('personasGrid');
 RU_PERSONAS.forEach(p => {
@@ -482,12 +483,6 @@ RU_PERSONAS.forEach(p => {
   btn.onclick = () => selectPersona(p.id, p.name, btn);
   grid.appendChild(btn);
 });
-
-function selectPersona(id, name, btn) {
-  document.querySelectorAll('.persona-btn').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-  selectedPersona = { id, name };
-}
 
 // Tone buttons
 document.querySelectorAll('.tone-btn').forEach(btn => {
@@ -507,6 +502,13 @@ document.getElementById('angerSlider').oninput = function() {
   document.getElementById('angerFill').style.background = level.color;
   document.getElementById('angerEmoji').textContent = level.emoji;
 };
+} // end initPanel
+
+function selectPersona(id, name, btn) {
+  document.querySelectorAll('.persona-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  selectedPersona = { id, name };
+}
 
 async function generate() {
   const btn = document.getElementById('genBtn');
@@ -643,6 +645,7 @@ function loadFromHistory(id, persona, text) {
 
 <script>
 const ADMIN_PASSWORD = 'kissex11%%';
+let panelInited = false;
 
 function unlock() {
   const val = document.getElementById('lockInput').value;
@@ -650,6 +653,7 @@ function unlock() {
     document.getElementById('lockScreen').style.display = 'none';
     document.getElementById('mainContent').style.display = 'block';
     sessionStorage.setItem('mudrets_admin', '1');
+    if (!panelInited) { initPanel(); panelInited = true; }
   } else {
     const err = document.getElementById('lockErr');
     err.textContent = '✗ Неверный пароль';
@@ -661,6 +665,7 @@ function unlock() {
 if (sessionStorage.getItem('mudrets_admin') === '1') {
   document.getElementById('lockScreen').style.display = 'none';
   document.getElementById('mainContent').style.display = 'block';
+  if (!panelInited) { initPanel(); panelInited = true; }
 }
 </script>
 </body>
