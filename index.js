@@ -325,6 +325,57 @@ setInterval(sendDailyWisdom, 60 * 60 * 1000);
 
 app.get('/health', (req, res) => res.json({ ok: true }));
 
+app.get('/contest-video', async (req, res) => {
+  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'contest-'));
+  try {
+    const portraitPath = path.join(tmpDir, 'mudrets.png');
+    await downloadImage(MUDRETS_IMG, portraitPath);
+
+    const framePath = path.join(tmpDir, 'frame.png');
+    const scriptPath = path.join(__dirname, 'render_contest.js');
+    const frameData = JSON.stringify({ portrait_path: portraitPath, output_path: framePath });
+    await execAsync(`node "${scriptPath}" ${JSON.stringify(frameData)}`);
+
+    const text = 'Пустота объявляет розыгрыш iPhone 17 Pro Max. Получи предсказание, скачай видео, выложи с хештегом mudrets17 — и выиграй. Мудрец выберет победителя из пустоты.';
+    const audioBase64 = await getAudio(text);
+    let audioDuration = 12;
+    let audioPath = null;
+
+    if (audioBase64) {
+      audioPath = path.join(tmpDir, 'audio.mp3');
+      fs.writeFileSync(audioPath, Buffer.from(audioBase64, 'base64'));
+      try {
+        const probe = await execAsync(`ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "${audioPath}"`);
+        audioDuration = Math.ceil(parseFloat(probe.trim())) + 2;
+      } catch(e) {}
+    }
+
+    const videoPath = path.join(tmpDir, 'contest.mp4');
+    const ffCmd = [
+      `ffmpeg -y -loop 1 -framerate 1 -i "${framePath}"`,
+      audioPath ? `-i "${audioPath}"` : '',
+      `-c:v libx264 -preset fast -crf 26 -pix_fmt yuv420p`,
+      `-t ${audioDuration + 1.5}`,
+      audioPath ? `-c:a aac -af "apad=pad_dur=1.5" -t ${audioDuration + 1.5}` : `-an`,
+      `"${videoPath}"`
+    ].filter(Boolean).join(' ');
+    await execAsync(ffCmd, { timeout: 120000 });
+
+    res.setHeader('Content-Type', 'video/mp4');
+    res.setHeader('Content-Disposition', 'attachment; filename="mudrets_contest.mp4"');
+    const stream = fs.createReadStream(videoPath);
+    stream.pipe(res);
+    stream.on('end', () => { try { fs.rmSync(tmpDir, { recursive: true }); } catch(e) {} });
+    stream.on('error', () => { try { fs.rmSync(tmpDir, { recursive: true }); } catch(e) {} });
+  } catch(e) {
+    console.error('[CONTEST VIDEO] error:', e.message);
+    try { fs.rmSync(tmpDir, { recursive: true }); } catch(e2) {}
+    res.status(500).json({ error: 'failed' });
+  }
+});
+
+
+
 app.post('/free-wisdom', async (req, res) => {
   const { lang } = req.body;
   const ip = req.headers['x-forwarded-for']?.split(',')[0] || req.socket.remoteAddress;
