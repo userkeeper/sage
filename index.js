@@ -308,7 +308,8 @@ async function sendDailyWisdom() {
   const result = await getWisdom(0, 'ru', 'daily', 'daily');
   if (result.text) {
     await postToTelegram(`🌑 <b>Мудрость дня</b>\n\n${result.text}`, MUDRETS_IMG);
-    generateAndSendVideo(result.text, null, 'Мудрец Пустоты', null);
+    const audio = await getAudio(result.text);
+    generateAndSendVideo(result.text, null, 'Мудрец Пустоты', audio);
     dailyWisdomSent.date = today;
     dailyWisdomSent.sent = true;
   }
@@ -336,7 +337,8 @@ app.post('/free-wisdom', async (req, res) => {
 
   const label = lang === 'ru' ? '🪙 <b>Нищебродская мудрость</b>' : '🪙 <b>Cheapskate wisdom</b>';
   await postToTelegram(`${label}\n\n${result.text}`, MUDRETS_IMG);
-  generateAndSendVideo(result.text, null, 'Мудрец Пустоты', null);
+  const freeAudio = await getAudio(result.text);
+  generateAndSendVideo(result.text, null, 'Мудрец Пустоты', freeAudio);
 
   res.json({ wisdom: result.text, free: true });
 });
