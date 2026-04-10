@@ -93,6 +93,21 @@
   .speak-btn:active { transform:translate(2px,2px); box-shadow:2px 2px 0 #8a7030; }
   .tg-link { display: block; text-align: center; font-family:'VT323',monospace; font-size:16px; color:#5a7a5a; margin-top: 16px; text-decoration: none; }
   .tg-link:hover { color: #7ab07a; }
+
+  .contest-banner {
+    display: block; margin-top: 16px;
+    border: 2px solid #c8a84b; background: #0d0d1a;
+    padding: 14px 16px; cursor: pointer;
+    text-decoration: none; box-shadow: 3px 3px 0 #6a5820;
+    transition: transform 0.08s, box-shadow 0.08s;
+  }
+  .contest-banner:hover { transform: translate(-1px,-1px); box-shadow: 4px 4px 0 #6a5820; }
+  .contest-top { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+  .contest-icon { font-family:'VT323',monospace; font-size:28px; }
+  .contest-title { font-size: 7px; color: #c8a84b; letter-spacing: 1px; }
+  .contest-body { font-family:'VT323',monospace; font-size:15px; color:#a090b0; line-height:1.5; }
+  .contest-tag { font-family:'VT323',monospace; font-size:17px; color:#c8a84b; margin-top:8px; letter-spacing:1px; }
+
   .footer { margin-top:40px; font-family:'VT323',monospace; font-size:14px; color:#3a3020; text-align:center; z-index:1; }
   .wisdom-video-modal { display:none; position:fixed; inset:0; z-index:999; background:rgba(0,0,0,0.95); align-items:center; justify-content:center; flex-direction:column; gap:10px; padding:16px 0; }
   .wisdom-video-modal.active { display:flex; }
@@ -173,6 +188,15 @@
     <button class="speak-btn" id="speakBtn" onclick="speakWisdom()" style="display:none">▶ ОЗВУЧИТЬ</button>
   </div>
   <a class="tg-link" href="https://t.me/mudrets_on" target="_blank" id="t-tgLink">📢 Канал мудреца в Telegram</a>
+
+  <a class="contest-banner" id="contestBanner" href="contest.html" target="_blank">
+    <div class="contest-top">
+      <span class="contest-icon">🏆</span>
+      <span class="contest-title">КОНКУРС ОТ МУДРЕЦА</span>
+    </div>
+    <div class="contest-body" id="contestBody">Получи предсказание, скачай видео, выложи в TikTok или Instagram — и выиграй iPhone 17 Pro Max. Мудрец сам выберет победителя из пустоты.</div>
+    <div class="contest-tag">#mudrets17 · @mudrets_on</div>
+  </a>
 </div>
 
 <div class="footer" id="t-footer"></div>
@@ -276,6 +300,9 @@ function setLang(l) {
   document.getElementById('t-tgLink').textContent = t.tgLink;
   document.getElementById('bubble').textContent = t.bubbleIdle;
   document.getElementById('status').textContent = '';
+  document.getElementById('contestBody').textContent = lang === 'ru'
+    ? 'Получи предсказание, скачай видео, выложи в TikTok или Instagram — и выиграй iPhone 17 Pro Max. Мудрец сам выберет победителя из пустоты.'
+    : 'Get a prediction, download the video, post it on TikTok or Instagram — and win iPhone 17 Pro Max. The Sage will choose the winner from the void.';
 }
 
 function copyAddr() {

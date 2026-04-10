@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Мудрец — Панель управления</title>
+<style>
+  @import url('https://fonts.cdnfonts.com/css/press-start-2p');
+  @import url('https://fonts.cdnfonts.com/css/vt323');
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: #08080f;
+    color: #e8e0c8;
+    font-family: 'Press Start 2P', monospace;
+    min-height: 100vh;
+    padding: 32px 20px;
+  }
+
+  .lock-screen {
+    position: fixed; inset: 0; background: #08080f;
+    display: flex; align-items: center; justify-content: center;
+    flex-direction: column; gap: 16px; z-index: 9999;
+  }
+  .lock-title { font-size: 10px; color: #c8a84b; letter-spacing: 3px; }
+  .lock-input {
+    background: #0d0d1a; border: 2px solid #2a2040;
+    color: #e8e0c8; font-family: 'Press Start 2P', monospace;
+    font-size: 11px; padding: 12px 16px; outline: none; width: 260px;
+    text-align: center; letter-spacing: 4px;
+  }
+  .lock-input:focus { border-color: #c8a84b; }
+  .lock-btn {
+    background: #c8a84b; color: #08080f; border: none;
+    font-family: 'Press Start 2P', monospace; font-size: 8px;
+    padding: 12px 24px; cursor: pointer; box-shadow: 3px 3px 0 #6a5820;
+  }
+  .lock-err { font-family: 'VT323', monospace; font-size: 16px; color: #c84b4b; min-height: 20px; }
+
+  .grid-bg {
+    position: fixed; inset: 0; pointer-events: none; z-index: 0;
+    background-image:
+      linear-gradient(rgba(200,168,75,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(200,168,75,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+  }
+
+  .scanlines {
+    position: fixed; inset: 0; pointer-events: none; z-index: 0;
+    background: repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,0,0,0.08) 3px,rgba(0,0,0,0.08) 4px);
+  }
+
+  .wrap { position: relative; z-index: 1; max-width: 900px; margin: 0 auto; }
+
+  h1 {
+    font-size: clamp(8px, 1.5vw, 13px);
+    color: #c8a84b;
+    letter-spacing: 3px;
+    margin-bottom: 4px;
+    text-shadow: 0 0 20px rgba(200,168,75,0.4);
+  }
+  .sub {
+    font-family: 'VT323', monospace;
+    font-size: 16px;
+    color: #4a3a5a;
+    margin-bottom: 32px;
+    letter-spacing: 1px;
+  }
+
+  .panel {
+    background: #0d0d1a;
+    border: 2px solid #2a2040;
+    padding: 24px;
+    margin-bottom: 20px;
+  }
+
+  .panel-title {
+    font-size: 7px;
+    color: #c8a84b;
+    letter-spacing: 2px;
+    margin-bottom: 16px;
+    border-bottom: 1px solid #2a2040;
+    padding-bottom: 10px;
+  }
+
+  /* Persona grid */
+  .personas-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+
+  .persona-btn {
+    background: #0a0a14;
+    border: 2px solid #1e1e30;
+    padding: 10px 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.15s;
+  }
+  .persona-btn:hover { border-color: #c8a84b; background: #12121e; }
+  .persona-btn.active { border-color: #c8a84b; background: #1a1510; }
+  .persona-btn.active .pname { color: #c8a84b; }
+
+  .persona-btn img {
+    width: 32px; height: 32px;
+    object-fit: cover;
+    image-rendering: pixelated;
+    border: 1px solid #2a2040;
+    flex-shrink: 0;
+  }
+  .pname {
+    font-family: 'VT323', monospace;
+    font-size: 14px;
+    color: #7a6a8a;
+    line-height: 1.2;
+  }
+
+  /* Options row */
+  .options-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 20px;
+  }
+
+  @media (max-width: 600px) {
+    .options-row { grid-template-columns: 1fr; }
+  }
+
+  .opt-group label {
+    display: block;
+    font-size: 6px;
+    color: #c8a84b;
+    letter-spacing: 2px;
+    margin-bottom: 8px;
+  }
+
+  select, .tone-btns {
+    width: 100%;
+  }
+
+  select {
+    background: #0a0a14;
+    border: 2px solid #2a2040;
+    color: #e8e0c8;
+    font-family: 'VT323', monospace;
+    font-size: 16px;
+    padding: 8px 10px;
+    outline: none;
+    cursor: pointer;
+  }
+  select:focus { border-color: #c8a84b; }
+
+  .tone-btns {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+  .tone-btn {
+    background: #0a0a14;
+    border: 2px solid #1e1e30;
+    color: #5a4a6a;
+    font-family: 'VT323', monospace;
+    font-size: 13px;
+    padding: 5px 10px;
+    cursor: pointer;
+    transition: all 0.1s;
+    flex: 1;
+    min-width: 80px;
+    text-align: center;
+  }
+  .tone-btn:hover { border-color: #c8a84b; color: #c8a84b; }
+  .tone-btn.active { background: #1a1510; border-color: #c8a84b; color: #c8a84b; }
+
+  /* Anger slider */
+  .anger-row { display: flex; align-items: center; gap: 10px; }
+  .anger-track { flex: 1; height: 6px; background: #0d0d1a; border: 1px solid #2a2040; position: relative; }
+  .anger-fill { height: 100%; background: #c8a84b; transition: width 0.3s, background 0.3s; }
+  .anger-emojis { font-size: 11px; display: flex; justify-content: space-between; margin-top: 4px; }
+  input[type=range] {
+    width: 100%;
+    accent-color: #c8a84b;
+    margin-top: 6px;
+  }
+
+  /* Generate button */
+  .gen-btn {
+    width: 100%;
+    background: #c8a84b;
+    color: #08080f;
+    border: none;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 9px;
+    padding: 16px;
+    cursor: pointer;
+    letter-spacing: 1px;
+    box-shadow: 5px 5px 0 #6a5820;
+    transition: transform 0.08s, box-shadow 0.08s;
+    margin-bottom: 16px;
+  }
+  .gen-btn:hover { transform: translate(-1px,-1px); box-shadow: 6px 6px 0 #6a5820; }
+  .gen-btn:active { transform: translate(2px,2px); box-shadow: 3px 3px 0 #6a5820; }
+  .gen-btn:disabled { background: #3a3020; color: #6a6050; box-shadow: none; cursor: default; transform: none; }
+
+  /* Output */
+  .output-panel {
+    background: #0a0a14;
+    border: 2px solid #c8a84b;
+    padding: 20px;
+    display: none;
+    box-shadow: 4px 4px 0 #6a5820;
+  }
+  .output-panel.visible { display: block; }
+
+  .output-header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 16px;
+  }
+  .output-header img {
+    width: 60px; height: 60px;
+    object-fit: cover;
+    image-rendering: pixelated;
+    border: 2px solid #c8a84b;
+  }
+  .output-meta { flex: 1; }
+  .output-persona {
+    font-size: 8px;
+    color: #c8a84b;
+    letter-spacing: 1px;
+    margin-bottom: 4px;
+  }
+  .output-tone {
+    font-family: 'VT323', monospace;
+    font-size: 14px;
+    color: #4a3a5a;
+  }
+
+  .wisdom-text {
+    font-family: 'VT323', monospace;
+    font-size: 20px;
+    color: #e8c878;
+    line-height: 1.6;
+    border-top: 1px solid #2a2040;
+    padding-top: 14px;
+    margin-bottom: 16px;
+  }
+
+  .output-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .act-btn {
+    flex: 1;
+    min-width: 120px;
+    background: transparent;
+    border: 2px solid #3a3020;
+    color: #7a6a5a;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 7px;
+    padding: 10px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .act-btn:hover { border-color: #c8a84b; color: #c8a84b; }
+  .act-btn.primary { background: #c8a84b; color: #08080f; border-color: #c8a84b; box-shadow: 3px 3px 0 #6a5820; }
+  .act-btn.primary:hover { transform: translate(-1px,-1px); box-shadow: 4px 4px 0 #6a5820; }
+
+  .status-line {
+    font-family: 'VT323', monospace;
+    font-size: 15px;
+    min-height: 22px;
+    margin-top: 10px;
+    text-align: center;
+  }
+  .status-line.ok { color: #4bc8a8; }
+  .status-line.err { color: #c84b4b; }
+  .status-line.loading { color: #7a7060; }
+
+  /* History */
+  .history-list { max-height: 300px; overflow-y: auto; }
+  .history-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 10px 0;
+    border-bottom: 1px solid #1a1a28;
+    cursor: pointer;
+    transition: background 0.1s;
+  }
+  .history-item:hover { background: #0d0d1a; }
+  .history-item img { width: 36px; height: 36px; object-fit: cover; image-rendering: pixelated; border: 1px solid #2a2040; flex-shrink: 0; }
+  .h-name { font-size: 6px; color: #c8a84b; margin-bottom: 4px; }
+  .h-text { font-family: 'VT323', monospace; font-size: 14px; color: #6a5a7a; line-height: 1.4; }
+  .h-time { font-family: 'VT323', monospace; font-size: 12px; color: #2a2040; margin-left: auto; flex-shrink: 0; }
+</style>
+</head>
+<body>
+<div class="lock-screen" id="lockScreen">
+  <div class="lock-title">☽ ВХОД В ПУСТОТУ ☾</div>
+  <input class="lock-input" id="lockInput" type="password" placeholder="· · · · · · · ·"
+    onkeydown="if(event.key==='Enter')unlock()">
+  <button class="lock-btn" onclick="unlock()">ВОЙТИ</button>
+  <div class="lock-err" id="lockErr"></div>
+</div>
+
+<div id="mainContent" style="display:none">
+<div class="grid-bg"></div>
+<div class="scanlines"></div>
+
+<div class="wrap">
+  <h1>⚙ ПАНЕЛЬ УПРАВЛЕНИЯ</h1>
+  <div class="sub">Генератор мудростей на заказ</div>
+
+  <!-- Personas -->
+  <div class="panel">
+    <div class="panel-title">▸ ПЕРСОНАЖ</div>
+    <div class="personas-grid" id="personasGrid"></div>
+  </div>
+
+  <!-- Options -->
+  <div class="panel">
+    <div class="panel-title">▸ НАСТРОЙКИ</div>
+    <div class="options-row">
+      <div class="opt-group">
+        <label>ЯЗЫК</label>
+        <select id="langSelect">
+          <option value="ru">🇷🇺 Русский</option>
+          <option value="en">🇺🇸 English</option>
+        </select>
+      </div>
+      <div class="opt-group">
+        <label>ТОН</label>
+        <div class="tone-btns" id="toneBtns">
+          <button class="tone-btn active" data-tone="random">Случайный</button>
+          <button class="tone-btn" data-tone="mat">С матом</button>
+          <button class="tone-btn" data-tone="suho">Сухо</button>
+          <button class="tone-btn" data-tone="ironiya">Ирония</button>
+          <button class="tone-btn" data-tone="spokoyno">Спокойно</button>
+        </div>
+      </div>
+      <div class="opt-group">
+        <label>УРОВЕНЬ ГНЕВА</label>
+        <input type="range" id="angerSlider" min="1" max="100" value="1" step="1">
+        <div class="anger-row" style="margin-top:6px">
+          <div class="anger-track" style="flex:1">
+            <div class="anger-fill" id="angerFill" style="width:1%"></div>
+          </div>
+          <span id="angerEmoji" style="font-size:16px">😐</span>
+        </div>
+        <div class="anger-emojis"><span>😐</span><span>😤</span><span>😠</span><span>🔥</span><span>💀</span><span>☠️</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Generate -->
+  <button class="gen-btn" id="genBtn" onclick="generate()">▶ СГЕНЕРИРОВАТЬ МУДРОСТЬ</button>
+  <div class="status-line" id="statusLine"></div>
+
+  <!-- Output -->
+  <div class="output-panel" id="outputPanel">
+    <div class="output-header">
+      <img id="outImg" src="" alt="">
+      <div class="output-meta">
+        <div class="output-persona" id="outPersona"></div>
+        <div class="output-tone" id="outTone"></div>
+      </div>
+    </div>
+    <div class="wisdom-text" id="outText"></div>
+    <div class="output-actions">
+      <button class="act-btn" onclick="playAudio()">▶ ОЗВУЧИТЬ</button>
+      <button class="act-btn" onclick="copyWisdom()">⎘ СКОПИРОВАТЬ</button>
+      <button class="act-btn primary" onclick="sendToTG()">📤 ОТПРАВИТЬ В TG</button>
+    </div>
+  </div>
+
+  <!-- History -->
+  <div class="panel" style="margin-top:20px">
+    <div class="panel-title">▸ ИСТОРИЯ СЕССИИ</div>
+    <div class="history-list" id="historyList">
+      <div style="font-family:'VT323',monospace;font-size:14px;color:#2a2040;text-align:center;padding:20px">Пусто</div>
+    </div>
+  </div>
+</div>
+
+</div><!-- /mainContent -->
+
+<script>
+const ADMIN_PASSWORD = 'kissex11%%';
+
+function unlock() {
+  const val = document.getElementById('lockInput').value;
+  if (val === ADMIN_PASSWORD) {
+    document.getElementById('lockScreen').style.display = 'none';
+    document.getElementById('mainContent').style.display = 'block';
+    sessionStorage.setItem('mudrets_admin', '1');
+  } else {
+    const err = document.getElementById('lockErr');
+    err.textContent = '✗ Неверный пароль';
+    document.getElementById('lockInput').value = '';
+    setTimeout(() => err.textContent = '', 2000);
+  }
+}
+
+<script>
+const BACKEND = 'https://sage-production-6a45.up.railway.app';
+const PERSONAS_BASE = 'https://raw.githubusercontent.com/userkeeper/sage/main/personas/';
+const TEST_PASSWORD = 'userkeeper';
+
+const RU_PERSONAS = [
+  { id:'mellstroy',    name:'Mellstroy' },
+  { id:'morgenshtern', name:'Моргенштерн' },
+  { id:'bratishkin',   name:'Братишкин' },
+  { id:'khovansky',    name:'Хованский' },
+  { id:'litvin',       name:'Литвин' },
+  { id:'evelone',      name:'Evelone' },
+  { id:'buster',       name:'Buster' },
+  { id:'zubarefff',    name:'Zubarefff' },
+  { id:'zloy',         name:'Злой' },
+  { id:'gensyxa',      name:'Gensyxa' },
+  { id:'poperechny',   name:'Поперечный' },
+  { id:'egor_kreed',   name:'Egor Kreed' },
+  { id:'renatko',      name:'renatko' },
+  { id:'ivan_zolo',    name:'Иван Золо' },
+  { id:'anar',         name:'Анар' },
+];
+
+const TONES = {
+  random:   { ru: 'случайный',               en: 'random' },
+  mat:      { ru: 'с матом и злостью',        en: 'with profanity and rage' },
+  suho:     { ru: 'сухо и беспощадно',        en: 'dry and merciless' },
+  ironiya:  { ru: 'с иронией и презрением',   en: 'with cold irony' },
+  spokoyno: { ru: 'издевательски спокойно',   en: 'mockingly calm' },
+};
+
+const ANGER_LEVELS = [
+  { min:0,   emoji:'😐', color:'#c8a84b' },
+  { min:20,  emoji:'😤', color:'#e8832a' },
+  { min:40,  emoji:'😠', color:'#e84a2a' },
+  { min:60,  emoji:'🔥', color:'#c82020' },
+  { min:80,  emoji:'💀', color:'#8b0000' },
+  { min:95,  emoji:'☠️', color:'#4a0000' },
+];
+
+let selectedPersona = null;
+let selectedTone = 'random';
+let currentWisdom = '';
+let currentAudio = null;
+let currentPersonaId = null;
+let history = [];
+
+// Build persona grid
+const grid = document.getElementById('personasGrid');
+RU_PERSONAS.forEach(p => {
+  const btn = document.createElement('button');
+  btn.className = 'persona-btn';
+  btn.dataset.id = p.id;
+  btn.innerHTML = `<img src="${PERSONAS_BASE}${p.id}.png" alt="${p.name}"><span class="pname">${p.name}</span>`;
+  btn.onclick = () => selectPersona(p.id, p.name, btn);
+  grid.appendChild(btn);
+});
+
+function selectPersona(id, name, btn) {
+  document.querySelectorAll('.persona-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  selectedPersona = { id, name };
+}
+
+// Tone buttons
+document.querySelectorAll('.tone-btn').forEach(btn => {
+  btn.onclick = () => {
+    document.querySelectorAll('.tone-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    selectedTone = btn.dataset.tone;
+  };
+});
+
+// Anger slider
+document.getElementById('angerSlider').oninput = function() {
+  const v = +this.value;
+  let level = ANGER_LEVELS[0];
+  for (const l of ANGER_LEVELS) { if (v >= l.min) level = l; }
+  document.getElementById('angerFill').style.width = v + '%';
+  document.getElementById('angerFill').style.background = level.color;
+  document.getElementById('angerEmoji').textContent = level.emoji;
+};
+
+async function generate() {
+  const btn = document.getElementById('genBtn');
+  const status = document.getElementById('statusLine');
+  const lang = document.getElementById('langSelect').value;
+  const anger = +document.getElementById('angerSlider').value;
+
+  btn.disabled = true;
+  status.className = 'status-line loading';
+  status.textContent = '⏳ Мудрец смотрит в пустоту...';
+
+  // Build a custom txid with persona hint if selected
+  // We'll use the test password and intercept on backend
+  // For now: call /wisdom with test password
+  // The backend will pick random persona — but we want specific one
+  // So we call /generate-custom endpoint (we'll add it) or use existing with override
+
+  try {
+    const body = {
+      txid: TEST_PASSWORD,
+      lang,
+      forcePersonaId: selectedPersona?.id || null,
+      forceTone: selectedTone !== 'random' ? TONES[selectedTone][lang] : null,
+      forceAnger: anger,
+    };
+
+    const res = await fetch(`${BACKEND}/wisdom`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+    const data = await res.json();
+
+    if (!res.ok) {
+      status.className = 'status-line err';
+      status.textContent = '✗ ' + (data.error || 'Ошибка');
+      btn.disabled = false;
+      return;
+    }
+
+    currentWisdom = data.wisdom;
+    currentAudio = data.audio || null;
+    currentPersonaId = data.personaId || (selectedPersona?.id) || null;
+
+    const pname = data.personaName || selectedPersona?.name || 'Мудрец Пустоты';
+    const imgSrc = currentPersonaId ? PERSONAS_BASE + currentPersonaId + '.png' : PERSONAS_BASE + 'mudrets.png';
+    const angerEmoji = document.getElementById('angerEmoji').textContent;
+
+    document.getElementById('outImg').src = imgSrc;
+    document.getElementById('outPersona').textContent = pname.toUpperCase();
+    document.getElementById('outTone').textContent = angerEmoji + ' ' + (TONES[selectedTone][lang]);
+    document.getElementById('outText').textContent = data.wisdom;
+    document.getElementById('outputPanel').className = 'output-panel visible';
+
+    status.className = 'status-line ok';
+    status.textContent = '✓ Мудрость получена';
+
+    addHistory({ persona: pname, id: currentPersonaId, text: data.wisdom });
+
+    if (currentAudio) {
+      new Audio('data:audio/mpeg;base64,' + currentAudio).play().catch(()=>{});
+    }
+
+  } catch(e) {
+    status.className = 'status-line err';
+    status.textContent = '✗ Ошибка соединения';
+  }
+  btn.disabled = false;
+}
+
+function playAudio() {
+  if (!currentAudio) return;
+  new Audio('data:audio/mpeg;base64,' + currentAudio).play();
+}
+
+function copyWisdom() {
+  if (!currentWisdom) return;
+  navigator.clipboard.writeText(currentWisdom);
+  const btn = event.target;
+  const orig = btn.textContent;
+  btn.textContent = '✓ СКОПИРОВАНО';
+  setTimeout(() => btn.textContent = orig, 1500);
+}
+
+async function sendToTG() {
+  const btn = event.target;
+  btn.disabled = true;
+  btn.textContent = '⏳ ОТПРАВКА...';
+  // Wisdom already sent to TG by backend on /wisdom call
+  // Just confirm to user
+  setTimeout(() => {
+    btn.disabled = false;
+    btn.textContent = '✓ УЖЕ В КАНАЛЕ';
+    setTimeout(() => btn.textContent = '📤 ОТПРАВИТЬ В TG', 2000);
+  }, 800);
+}
+
+function addHistory(item) {
+  history.unshift({ ...item, time: new Date().toLocaleTimeString('ru', {hour:'2-digit',minute:'2-digit'}) });
+  if (history.length > 20) history.pop();
+  renderHistory();
+}
+
+function renderHistory() {
+  const list = document.getElementById('historyList');
+  if (!history.length) {
+    list.innerHTML = '<div style="font-family:VT323,monospace;font-size:14px;color:#2a2040;text-align:center;padding:20px">Пусто</div>';
+    return;
+  }
+  list.innerHTML = history.map(h => `
+    <div class="history-item" onclick="loadFromHistory('${h.id}','${h.persona.replace(/'/g,"\\'")}','${h.text.replace(/'/g,"\\'")}')">
+      <img src="${h.id ? PERSONAS_BASE + h.id + '.png' : PERSONAS_BASE + 'mudrets.png'}" alt="">
+      <div>
+        <div class="h-name">${h.persona.toUpperCase()}</div>
+        <div class="h-text">${h.text.substring(0, 80)}${h.text.length > 80 ? '...' : ''}</div>
+      </div>
+      <span class="h-time">${h.time}</span>
+    </div>
+  `).join('');
+}
+
+function loadFromHistory(id, persona, text) {
+  currentPersonaId = id;
+  currentWisdom = text;
+  const imgSrc = id ? PERSONAS_BASE + id + '.png' : PERSONAS_BASE + 'mudrets.png';
+  document.getElementById('outImg').src = imgSrc;
+  document.getElementById('outPersona').textContent = persona.toUpperCase();
+  document.getElementById('outTone').textContent = '↩ из истории';
+  document.getElementById('outText').textContent = text;
+  document.getElementById('outputPanel').className = 'output-panel visible';
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+</script>
+
+<script>
+const ADMIN_PASSWORD = 'kissex11%%';
+
+function unlock() {
+  const val = document.getElementById('lockInput').value;
+  if (val === ADMIN_PASSWORD) {
+    document.getElementById('lockScreen').style.display = 'none';
+    document.getElementById('mainContent').style.display = 'block';
+    sessionStorage.setItem('mudrets_admin', '1');
+  } else {
+    const err = document.getElementById('lockErr');
+    err.textContent = '✗ Неверный пароль';
+    document.getElementById('lockInput').value = '';
+    setTimeout(() => err.textContent = '', 2000);
+  }
+}
+
+if (sessionStorage.getItem('mudrets_admin') === '1') {
+  document.getElementById('lockScreen').style.display = 'none';
+  document.getElementById('mainContent').style.display = 'block';
+}
+</script>
+</body>
+</html>

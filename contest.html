@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Конкурс Мудреца</title>
+<style>
+@import url('https://fonts.cdnfonts.com/css/press-start-2p');
+@import url('https://fonts.cdnfonts.com/css/vt323');
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: #08080f; display: flex; align-items: center; justify-content: center; min-height: 100vh; font-family: 'Press Start 2P', monospace; overflow: hidden; }
+canvas#bg { position: fixed; inset: 0; z-index: 0; }
+.scanlines { position: fixed; inset: 0; z-index: 1; pointer-events: none; background: repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,0,0,0.1) 3px,rgba(0,0,0,0.1) 4px); }
+.card {
+  position: relative; z-index: 2;
+  width: 420px;
+  border: 3px solid #c8a84b;
+  box-shadow: 0 0 40px rgba(200,168,75,0.3), inset 0 0 60px rgba(0,0,0,0.5);
+  background: #0a0a14;
+  overflow: hidden;
+  animation: appear 0.8s ease forwards;
+}
+@keyframes appear { from { opacity:0; transform:scale(0.95); } to { opacity:1; transform:scale(1); } }
+
+/* Top — sage portrait */
+.sage-zone {
+  position: relative; height: 300px; overflow: hidden;
+  border-bottom: 3px solid #c8a84b;
+}
+.sage-zone img {
+  width: 100%; height: 100%; object-fit: cover; object-position: top;
+  image-rendering: pixelated;
+  filter: brightness(0.85);
+}
+.sage-overlay {
+  position: absolute; inset: 0;
+  background: linear-gradient(to bottom, transparent 50%, #0a0a14 100%);
+}
+.sage-title {
+  position: absolute; bottom: 16px; left: 0; right: 0; text-align: center;
+  font-size: 11px; color: #c8a84b; letter-spacing: 3px;
+  text-shadow: 0 0 20px rgba(200,168,75,0.8);
+  animation: glow 2s ease-in-out infinite;
+}
+@keyframes glow { 0%,100%{text-shadow:0 0 10px rgba(200,168,75,0.5)} 50%{text-shadow:0 0 30px rgba(200,168,75,1)} }
+
+/* Prize */
+.prize-zone {
+  display: flex; align-items: center; gap: 14px;
+  padding: 16px 20px;
+  border-bottom: 1px solid #1e1e30;
+  background: #0d0d1a;
+}
+.iphone-pixel { width: 56px; height: 80px; flex-shrink: 0; image-rendering: pixelated; }
+.prize-text { flex: 1; }
+.prize-label { font-size: 6px; color: #5a4a6a; letter-spacing: 2px; margin-bottom: 6px; }
+.prize-name { font-family: 'VT323', monospace; font-size: 22px; color: #c8a84b; line-height: 1.2; }
+
+/* Conditions */
+.conditions { padding: 16px 20px; border-bottom: 1px solid #1e1e30; }
+.cond-title { font-size: 7px; color: #c8a84b; letter-spacing: 2px; margin-bottom: 12px; }
+.cond-item {
+  display: flex; align-items: flex-start; gap: 10px;
+  margin-bottom: 10px;
+  font-family: 'VT323', monospace; font-size: 16px; color: #a090b0; line-height: 1.4;
+}
+.cond-num {
+  width: 22px; height: 22px; background: #c8a84b; color: #08080f;
+  font-size: 8px; display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; margin-top: 2px;
+}
+
+/* Hashtag */
+.hashtag-zone { padding: 14px 20px; text-align: center; border-bottom: 1px solid #1e1e30; }
+.hashtag {
+  font-family: 'VT323', monospace; font-size: 28px; color: #c8a84b;
+  letter-spacing: 2px;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.6} }
+
+/* Footer */
+.footer-zone { padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; }
+.site { font-family: 'VT323', monospace; font-size: 14px; color: #3a2a4a; }
+.deadline { font-family: 'VT323', monospace; font-size: 14px; color: #c84b4b; }
+
+/* Pixel decorations */
+.corner { position: absolute; width: 8px; height: 8px; background: #c8a84b; }
+.tl { top: -1px; left: -1px; }
+.tr { top: -1px; right: -1px; }
+.bl { bottom: -1px; left: -1px; }
+.br { bottom: -1px; right: -1px; }
+</style>
+</head>
+<body>
+<canvas id="bg"></canvas>
+<div class="scanlines"></div>
+
+<div class="card">
+  <div class="corner tl"></div><div class="corner tr"></div>
+  <div class="corner bl"></div><div class="corner br"></div>
+
+  <div class="sage-zone">
+    <img src="https://raw.githubusercontent.com/userkeeper/sage/main/personas/mudrets.png" alt="Мудрец">
+    <div class="sage-overlay"></div>
+    <div class="sage-title">МУДРЕЦ ПУСТОТЫ ДАРУЕТ</div>
+  </div>
+
+  <div class="prize-zone">
+    <canvas class="iphone-pixel" id="iphoneCanvas" width="56" height="80"></canvas>
+    <div class="prize-text">
+      <div class="prize-label">☽ ПРИЗ ☾</div>
+      <div class="prize-name">iPHONE 17<br>PRO MAX</div>
+    </div>
+  </div>
+
+  <div class="conditions">
+    <div class="cond-title">▸ УСЛОВИЯ</div>
+    <div class="cond-item"><div class="cond-num">1</div>Получи любое платное предсказание на mudrets.online</div>
+    <div class="cond-item"><div class="cond-num">2</div>Выложи видео в TikTok или Instagram</div>
+    <div class="cond-item"><div class="cond-num">3</div>Поставь хештег #mudrets17 и отметь @mudrets_on</div>
+    <div class="cond-item"><div class="cond-num">4</div>Победитель выбирается случайно мудрецом</div>
+  </div>
+
+  <div class="hashtag-zone">
+    <div class="hashtag">#mudrets17</div>
+  </div>
+
+  <div class="footer-zone">
+    <div class="site">mudrets.online</div>
+    <div class="site" style="color:#c8a84b">@mudrets_on</div>
+  </div>
+</div>
+
+<script>
+// Starfield bg
+const c = document.getElementById('bg');
+const cx = c.getContext('2d');
+function resize() { c.width = window.innerWidth; c.height = window.innerHeight; }
+resize(); window.onresize = resize;
+const stars = Array.from({length:80}, () => ({
+  x: Math.random()*window.innerWidth, y: Math.random()*window.innerHeight,
+  s: Math.random()*1.5+0.5, t: Math.random()*Math.PI*2, sp: 0.005+Math.random()*0.01
+}));
+function drawBg() {
+  cx.clearRect(0,0,c.width,c.height);
+  stars.forEach(s => {
+    s.t += s.sp;
+    cx.fillStyle = `rgba(200,168,75,${0.15+0.4*Math.abs(Math.sin(s.t))})`;
+    cx.fillRect(s.x, s.y, s.s, s.s);
+  });
+  requestAnimationFrame(drawBg);
+}
+drawBg();
+
+// Pixel iPhone drawing
+const ic = document.getElementById('iphoneCanvas');
+const ix = ic.getContext('2d');
+const S = 2;
+function px(x,y,w,h,col) { ix.fillStyle=col; ix.fillRect(x*S,y*S,w*S,h*S); }
+// Body
+px(3,0,22,40,'#1a1a2a');
+px(4,1,20,38,'#2a2a3a');
+// Screen
+px(4,3,20,30,'#0a0a1a');
+px(5,4,18,28,'#1e3a5a');
+// Screen glow
+px(6,5,4,3,'rgba(100,180,255,0.3)');
+// Dynamic island
+px(10,3,8,2,'#0a0a1a');
+px(11,3,6,1,'#0a0a1a');
+// Side buttons
+px(2,8,1,4,'#c8a84b');
+px(2,14,1,3,'#c8a84b');
+px(25,10,1,6,'#c8a84b');
+// Bottom
+px(10,38,8,1,'#3a3a4a');
+// Shine
+ix.fillStyle='rgba(255,255,255,0.05)';
+ix.fillRect(8*S,4*S,4*S,24*S);
+</script>
+</body>
+</html>

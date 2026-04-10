@@ -86,7 +86,7 @@ function angerLevelFromTotal(total) {
   return 5;
 }
 
-async function getWisdom(amount, lang, seed, type = 'paid') {
+async function getWisdom(amount, lang, seed, type = 'paid', forcePersonaId = null, forceTone = null) {
   const isRu = lang === 'ru';
   let system, prompt, personaId = null, personaName = null;
 
@@ -102,13 +102,18 @@ async function getWisdom(amount, lang, seed, type = 'paid') {
     prompt = isRu ? 'Мудрость дня для всех.' : 'Wisdom of the day for everyone.';
   } else {
     const pool = isRu ? RU_PERSONAS : EN_PERSONAS;
-    const persona = pool[Math.floor(Math.random() * pool.length)];
+    let persona;
+    if (forcePersonaId) {
+      persona = pool.find(p => p.id === forcePersonaId) || pool[Math.floor(Math.random() * pool.length)];
+    } else {
+      persona = pool[Math.floor(Math.random() * pool.length)];
+    }
     personaId = persona.id;
     personaName = persona.name;
     const tones = isRu
       ? ['с матом и злостью', 'сухо и беспощадно', 'с иронией и презрением', 'издевательски спокойно']
       : ['with profanity and rage', 'dry and merciless', 'with cold irony', 'mockingly calm'];
-    const tone = tones[Math.floor(Math.random() * tones.length)];
+    const tone = forceTone || tones[Math.floor(Math.random() * tones.length)];
     const angerLevel = angerLevelFromTotal(amount);
     const angerDesc = isRu
       ? ['слегка недоволен', 'раздражён', 'разозлён', 'яростен', 'в абсолютной ярости'][angerLevel - 1]
@@ -344,25 +349,24 @@ app.post('/free-wisdom', async (req, res) => {
 });
 
 app.post('/wisdom', async (req, res) => {
-  const { txid, lang } = req.body;
+  const { txid, lang, forcePersonaId, forceTone, forceAnger } = req.body;
   const ip = req.headers['x-forwarded-for']?.split(',')[0] || req.socket.remoteAddress;
   if (!txid) return res.status(400).json({ error: 'no_txid' });
 
   const seed = Date.now().toString(36) + Math.random().toString(36).substring(2, 6);
 
   if (txid === process.env.TEST_PASSWORD) {
-    const anger = getAngerLevel(ip, 1);
-    const angerLevel = angerLevelFromTotal(anger);
-    const result = await getWisdom(1.0, lang, seed, 'paid');
+    const angerAmount = forceAnger ? parseFloat(forceAnger) : 1.0;
+    const angerLevel = angerLevelFromTotal(angerAmount);
+    const result = await getWisdom(angerAmount, lang, seed, 'paid', forcePersonaId, forceTone);
     if (!result.text) return res.status(500).json({ error: 'ai_failed' });
     const audio = await getAudio(result.text);
-    addAnger(ip, 1);
     const emoji = ['😤', '😠', '🔥', '💀', '☠️'][angerLevel - 1];
     const personaLine = result.personaName ? ` · ${result.personaName}` : '';
     const photoUrl = result.personaId ? GITHUB_PERSONAS + result.personaId + '.png' : MUDRETS_IMG;
-    await postToTelegram(`${emoji} <b>Мудрость мудреца${personaLine}</b>\n\n${result.text}\n\n<i>— пожертвование: 1 USDT</i>`, photoUrl);
+    await postToTelegram(`${emoji} <b>Мудрость мудреца${personaLine}</b>\n\n${result.text}`, photoUrl);
     generateAndSendVideo(result.text, result.personaId, result.personaName, audio);
-    return res.json({ wisdom: result.text, amount: 1.0, audio, angerLevel, personaId: result.personaId, personaName: result.personaName });
+    return res.json({ wisdom: result.text, amount: angerAmount, audio, angerLevel, personaId: result.personaId, personaName: result.personaName });
   }
 
   if (usedTxids.has(txid)) return res.status(400).json({ error: 'already_used' });
