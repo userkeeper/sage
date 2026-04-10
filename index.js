@@ -205,15 +205,16 @@ async function generateAndSendVideo(wisdomText, personaId, personaName, audioBas
       });
       await execAsync(`node "${scriptPath}" ${JSON.stringify(frameData)}`);
 
-      // Loop single frame for full duration + add audio
+      // Loop single frame for full duration + add audio with silence padding
       const videoPath = path.join(tmpDir, 'wisdom.mp4');
+      const totalDuration = audioDuration + 1.5;
       const ffCmd = [
         `ffmpeg -y`,
         `-loop 1 -framerate 1 -i "${framePath}"`,
         audioPath ? `-i "${audioPath}"` : '',
         `-c:v libx264 -preset fast -crf 28 -pix_fmt yuv420p`,
-        `-t ${audioDuration}`,
-        audioPath ? `-c:a aac` : `-an`,
+        `-t ${totalDuration}`,
+        audioPath ? `-c:a aac -af "apad=pad_dur=1.5" -t ${totalDuration}` : `-an`,
         `"${videoPath}"`
       ].filter(Boolean).join(' ');
 
