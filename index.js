@@ -189,7 +189,7 @@ async function generateAndSendVideo(wisdomText, personaId, personaName, audioBas
     const totalFrames = fps * audioDuration;
     const framesDir = path.join(tmpDir, 'frames');
     fs.mkdirSync(framesDir);
-    const scriptPath = path.join(__dirname, 'render_frame.py');
+    const scriptPath = path.join(__dirname, 'render_frame.js');
 
     for (let f = 0; f < totalFrames; f++) {
       const bars = Array.from({length: 20}, () => Math.floor(Math.random() * 50) + 8);
@@ -200,8 +200,8 @@ async function generateAndSendVideo(wisdomText, personaId, personaName, audioBas
         bar_heights: bars,
         output_path: path.join(framesDir, `frame${String(f).padStart(5,'0')}.png`)
       };
-      const frameJson = JSON.stringify(frameData).replace(/'/g, "\\'");
-      execSync(`python3 "${scriptPath}" '${frameJson}'`, { timeout: 30000 });
+      const frameJson = JSON.stringify(frameData);
+      execSync(`node "${scriptPath}" ${JSON.stringify(frameJson)}`, { timeout: 30000 });
     }
 
     const videoPath = path.join(tmpDir, 'wisdom.mp4');
