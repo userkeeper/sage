@@ -336,7 +336,7 @@ app.get('/contest-video', async (req, res) => {
     const frameData = JSON.stringify({ portrait_path: portraitPath, output_path: framePath });
     await execAsync(`node "${scriptPath}" ${JSON.stringify(frameData)}`);
 
-    const text = 'Пустота объявляет розыгрыш iPhone 17 Pro Max. Получи предсказание, скачай видео, выложи с хештегом mudrets17 — и выиграй. Мудрец выберет победителя из пустоты.';
+    const text = 'Пустота устала смотреть на тебя без телефона. Получи предсказание на mudrets.online, скачай видео, выложи с хештегом mudrets17 — и, возможно, пустота вернёт тебе айфон семнадцать про макс. Возможно. Мудрец не обещает. Мудрец лишь наблюдает.';
     const audioBase64 = await getAudio(text);
     let audioDuration = 12;
     let audioPath = null;
