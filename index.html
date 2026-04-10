@@ -15,9 +15,10 @@
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323:wght@400&display=swap');
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { background: #0a0a0a; color: #e8e0c8; font-family: 'Press Start 2P', monospace; min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 40px 20px; position: relative; overflow-x: hidden; }
-  body::before { content: ''; position: fixed; inset: 0; background: repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.15) 2px,rgba(0,0,0,0.15) 4px); pointer-events: none; z-index: 100; }
-  .stars { position: fixed; inset: 0; pointer-events: none; z-index: 0; }
+  body { background: #0a0a0a url('https://raw.githubusercontent.com/userkeeper/sage/main/bg.jpg') center center / cover fixed; color: #e8e0c8; font-family: 'Press Start 2P', monospace; min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 40px 20px; position: relative; overflow-x: hidden; }
+  body::before { content: ''; position: fixed; inset: 0; background: rgba(5,5,15,0.55); pointer-events: none; z-index: 0; }
+  body::after { content: ''; position: fixed; inset: 0; background: repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.08) 2px,rgba(0,0,0,0.08) 4px); pointer-events: none; z-index: 100; }
+  .stars { display: none; }
   .lang-switcher { display: flex; margin-bottom: 32px; z-index: 1; border: 2px solid #3a3020; }
   .lang-btn { background: #0d0d0d; color: #5a5040; border: none; font-family: 'Press Start 2P', monospace; font-size: 9px; padding: 10px 20px; cursor: pointer; letter-spacing: 1px; border-right: 2px solid #3a3020; transition: background 0.1s, color 0.1s; }
   .lang-btn:last-child { border-right: none; }
@@ -25,9 +26,26 @@
   .lang-btn:hover:not(.active) { background: #1a1a1a; color: #c8a84b; }
   .title { font-size: clamp(10px,2.5vw,18px); color: #c8a84b; text-align: center; margin-bottom: 8px; letter-spacing: 2px; text-shadow: 0 0 20px rgba(200,168,75,0.5); z-index: 1; }
   .subtitle { font-family: 'VT323', monospace; font-size: clamp(14px,3vw,22px); color: #7a7060; text-align: center; margin-bottom: 40px; letter-spacing: 1px; z-index: 1; }
-  .sage-container { position: relative; z-index: 1; margin-bottom: 30px; }
-  canvas#sage { image-rendering: pixelated; image-rendering: crisp-edges; display: block; }
-  .speech-bubble { position: absolute; top: -10px; left: 190px; background: #1a1a1a; border: 3px solid #c8a84b; padding: 14px; width: 220px; font-family: 'VT323', monospace; font-size: 16px; color: #e8e0c8; line-height: 1.4; display: none; z-index: 10; box-shadow: 4px 4px 0 #c8a84b; }
+  .sage-container { position: relative; z-index: 1; margin-bottom: 30px; width: 220px; height: 220px; }
+  #sageImg { width: 220px; height: 220px; image-rendering: pixelated; display: block; filter: drop-shadow(0 0 18px rgba(200,168,75,0.35)); }
+  canvas#sage { display: none; }
+  .persona-overlay {
+    position: absolute; top: 0; left: 0;
+    width: 220px; height: 220px;
+    image-rendering: pixelated; image-rendering: crisp-edges;
+    opacity: 0;
+    transition: opacity 0.5s ease;
+    pointer-events: none;
+  }
+  .persona-overlay.visible { opacity: 1; }
+  .persona-name-tag {
+    position: absolute; bottom: -22px; left: 50%; transform: translateX(-50%);
+    font-family: 'VT323', monospace; font-size: 14px; color: #c8a84b;
+    white-space: nowrap; opacity: 0; transition: opacity 0.4s ease;
+    text-shadow: 0 0 8px rgba(200,168,75,0.6);
+  }
+  .persona-name-tag.visible { opacity: 1; }
+  .speech-bubble { position: absolute; top: -10px; left: 240px; background: #1a1a1a; border: 3px solid #c8a84b; padding: 14px; width: 220px; font-family: 'VT323', monospace; font-size: 16px; color: #e8e0c8; line-height: 1.4; display: none; z-index: 10; box-shadow: 4px 4px 0 #c8a84b; }
   .speech-bubble.visible { display: block; }
   .speech-bubble::before { content:''; position:absolute; left:-18px; top:20px; width:0; height:0; border-top:8px solid transparent; border-bottom:8px solid transparent; border-right:15px solid #c8a84b; }
   .speech-bubble::after { content:''; position:absolute; left:-12px; top:20px; width:0; height:0; border-top:8px solid transparent; border-bottom:8px solid transparent; border-right:15px solid #1a1a1a; }
@@ -89,7 +107,10 @@
 <div class="subtitle" id="t-subtitle">Пожертвуй — и узнай то, что лучше бы не знал</div>
 
 <div class="sage-container">
+  <img id="sageImg" src="https://raw.githubusercontent.com/userkeeper/sage/main/personas/mudrets.png" alt="Мудрец Пустоты" />
   <canvas id="sage" width="160" height="180"></canvas>
+  <img id="personaOverlay" class="persona-overlay" src="" alt="" />
+  <div id="personaNameTag" class="persona-name-tag"></div>
   <div class="speech-bubble" id="bubble">...</div>
 </div>
 
@@ -275,6 +296,39 @@ function speakWisdom() {
   window.speechSynthesis.speak(utter);
 }
 
+/* === Persona Switch Animation === */
+const PERSONAS_BASE = 'https://raw.githubusercontent.com/userkeeper/sage/main/personas/';
+let personaSwitchTimer = null;
+
+function showPersona(personaId, personaName) {
+  if (!personaId) return;
+  clearTimeout(personaSwitchTimer);
+
+  const overlay = document.getElementById('personaOverlay');
+  const nameTag = document.getElementById('personaNameTag');
+  const sageImg = document.getElementById('sageImg');
+
+  overlay.src = PERSONAS_BASE + personaId + '.png';
+  overlay.onload = () => {
+    overlay.classList.add('visible');
+    nameTag.textContent = personaName || '';
+    nameTag.classList.add('visible');
+    sageImg.style.opacity = '0.12';
+    sageImg.style.transition = 'opacity 0.5s ease';
+  };
+
+  personaSwitchTimer = setTimeout(() => hidePersoma(), 5000);
+}
+
+function hidePersoma() {
+  const overlay = document.getElementById('personaOverlay');
+  const nameTag = document.getElementById('personaNameTag');
+  const sageImg = document.getElementById('sageImg');
+  overlay.classList.remove('visible');
+  nameTag.classList.remove('visible');
+  sageImg.style.opacity = '1';
+}
+
 /* === Free Wisdom === */
 async function getFreeWisdom() {
   const t = T[lang];
@@ -368,6 +422,8 @@ async function verify() {
     currentWisdom = data.wisdom;
     currentAudio = data.audio || null;
     updateAngerUI(data.angerLevel || 1);
+
+    if (data.personaId) showPersona(data.personaId, data.personaName);
 
     status.className = 'status success';
     status.textContent = t.received(data.amount.toFixed(1));

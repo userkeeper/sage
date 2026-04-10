@@ -18,37 +18,36 @@ const angerByIP = new Map();
 const dailyWisdomSent = { date: '', sent: false };
 
 const RU_PERSONAS = [
-  "Mellstroy: в декабре 2025 сам признался что в розыске Интерпола по запросу Казахстана, застрял на Кипре, его контент признан экстремистским в Беларуси, следствие хочет арестовать его имущество на 1 млрд рублей по делу об отмывании денег через казино",
-  "Моргенштерн: в марте 2026 начался заочный суд за уклонение от обязанностей иноагента, его недвижимость на 200 млн рублей арестована в январе 2025, из-за страха задержания выступает только в США, Испании и на Кипре за $150k минимум",
-  "Братишкин: в декабре 2025 получил 7-й бан на Twitch из-за картины с голой женщиной на стене за спиной, в 2025 сам признался 'я уже даже в свой онлайн не верю', обвинён в накрутке зрителей ботами, в ноябре 2025 посетил Госдуму",
-  "Хованский: вышел из СИЗО в 2021, уехал в Сербию спасаясь от мобилизации, женился, развёлся, расстался с новой девушкой за 9 месяцев, в 2025 году пьяный плакал разговаривая с нейросетью на стриме",
-  "Михаил Литвин: пошутил публично что купил военный билет — прокуратура Москвы это проверила и аннулировала отсрочку в июне 2025, теперь грозит уголовка за уклонение от армии, при этом каждый день снимает влоги о дисциплине и продуктивности",
-  "Evelone: в мае 2025 Twitch забанил его канал и в официальном письме посоветовал обратиться к врачу по поводу психического здоровья, в 2023 Steam заблокировал его аккаунт со скинами на $150 тысяч по подозрению в краже — разблокировали только через год переговоров",
-  "Buster: в мае 2025 выяснилось что его компания задолжала налоговой 4.5 млн рублей, в 2025 расстался с Диларой — бывшей женой Моргенштерна с которой встречался больше года, в декабре 2025 закрыл киберспортивную команду GUN5 по CS2 заявив что потерял интерес",
-  "Zubarefff: получил уже 6 банов на Twitch включая бан за сексуальный контент в июле 2025, живёт без постоянного места жительства — после Китая скитается между Дубаем и Казахстаном, его участие в фильме Скуф вызвало скандал из-за старых шуток про русских младенцев и доната Слава ВСУ",
-  "Злой (Zloy): 10 лет стримит казино, сам придумал термин бурмалда для зависимых от казино, рекламирует азартные игры но открыто говорит что это его основной заработок",
-  "Gensyxa: в декабре 2025 стала SLAY Queen второй раз, в том же году рассталась с двумя парнями подряд — сначала с Evelone потом с рэпером Toxi$, выпустила трек Френдзона",
-  "Данила Поперечный: уехал из России, стендап в эмиграции не взлетел как дома, снялся вместе с Моргенштерном в видео где они высмеивали патриотическую песню",
-  "Egor Kreed: позиционировал себя как серьёзный рэпер, стал попсой для подростков, обижается когда это говорят вслух",
-  "renatko: живёт на донаты подписчиков годами, называет это независимостью и свободой от работодателей",
-  "RavshanN: узбекский блогер который за 2024-2025 вырос до миллионов подписчиков на мотивационном контенте о простой жизни и деньгах, в декабре 2025 выиграл SLAY как лучший IRL-стример",
-  "Иван Золо: в декабре 2025 выиграл номинацию Человек-мем года на SLAY 2025, стал одним из самых быстрорастущих стримеров рунета 2025 года",
-  "Анар Абдуллаев: в декабре 2025 выиграл два SLAY подряд — прорыв года и лучший IRL-стример, вырос до миллионов подписчиков на мотивационном контенте"
+  { id: "mellstroy",    name: "Mellstroy",          fact: "в декабре 2025 сам признался что в розыске Интерпола по запросу Казахстана, застрял на Кипре, его контент признан экстремистским в Беларуси, следствие хочет арестовать его имущество на 1 млрд рублей по делу об отмывании денег через казино" },
+  { id: "morgenshtern", name: "Моргенштерн",         fact: "в марте 2026 начался заочный суд за уклонение от обязанностей иноагента, его недвижимость на 200 млн рублей арестована в январе 2025, из-за страха задержания выступает только в США, Испании и на Кипре за $150k минимум" },
+  { id: "bratishkin",   name: "Братишкин",           fact: "в декабре 2025 получил 7-й бан на Twitch из-за картины с голой женщиной на стене за спиной, в 2025 сам признался 'я уже даже в свой онлайн не верю', обвинён в накрутке зрителей ботами, в ноябре 2025 посетил Госдуму" },
+  { id: "khovansky",    name: "Хованский",           fact: "вышел из СИЗО в 2021, уехал в Сербию спасаясь от мобилизации, женился, развёлся, расстался с новой девушкой за 9 месяцев, в 2025 году пьяный плакал разговаривая с нейросетью на стриме" },
+  { id: "litvin",       name: "Михаил Литвин",       fact: "пошутил публично что купил военный билет — прокуратура Москвы это проверила и аннулировала отсрочку в июне 2025, теперь грозит уголовка за уклонение от армии, при этом каждый день снимает влоги о дисциплине и продуктивности" },
+  { id: "evelone",      name: "Evelone",             fact: "в мае 2025 Twitch забанил его канал и в официальном письме посоветовал обратиться к врачу по поводу психического здоровья, в 2023 Steam заблокировал его аккаунт со скинами на $150 тысяч по подозрению в краже — разблокировали только через год переговоров" },
+  { id: "buster",       name: "Buster",              fact: "в мае 2025 выяснилось что его компания задолжала налоговой 4.5 млн рублей, в 2025 расстался с Диларой — бывшей женой Моргенштерна с которой встречался больше года, в декабре 2025 закрыл киберспортивную команду GUN5 по CS2 заявив что потерял интерес" },
+  { id: "zubarefff",    name: "Zubarefff",           fact: "получил уже 6 банов на Twitch включая бан за сексуальный контент в июле 2025, живёт без постоянного места жительства — после Китая скитается между Дубаем и Казахстаном, его участие в фильме Скуф вызвало скандал из-за старых шуток про русских младенцев и доната Слава ВСУ" },
+  { id: "zloy",         name: "Злой",                fact: "10 лет стримит казино, сам придумал термин бурмалда для зависимых от казино, рекламирует азартные игры но открыто говорит что это его основной заработок" },
+  { id: "gensyxa",      name: "Gensyxa",             fact: "в декабре 2025 стала SLAY Queen второй раз, в том же году рассталась с двумя парнями подряд — сначала с Evelone потом с рэпером Toxi$, выпустила трек Френдзона" },
+  { id: "poperechny",   name: "Данила Поперечный",   fact: "уехал из России, стендап в эмиграции не взлетел как дома, снялся вместе с Моргенштерном в видео где они высмеивали патриотическую песню" },
+  { id: "egor_kreed",   name: "Egor Kreed",          fact: "позиционировал себя как серьёзный рэпер, стал попсой для подростков, обижается когда это говорят вслух" },
+  { id: "renatko",      name: "renatko",             fact: "живёт на донаты подписчиков годами, называет это независимостью и свободой от работодателей" },
+  { id: "ivan_zolo",    name: "Иван Золо",           fact: "в декабре 2025 выиграл номинацию Человек-мем года на SLAY 2025, стал одним из самых быстрорастущих стримеров рунета 2025 года" },
+  { id: "anar",         name: "Анар Абдуллаев",      fact: "в декабре 2025 выиграл два SLAY подряд — прорыв года и лучший IRL-стример, вырос до миллионов подписчиков на мотивационном контенте" },
 ];
 
 const EN_PERSONAS = [
-  "Dr Disrespect: banned from Twitch in June 2020 and spent 4 years claiming he had no idea why — in June 2024 it emerged he had sent inappropriate messages to a minor, still has millions of YouTube subscribers and never properly addressed it",
-  "MrBeast: in 2024 a former employee accused him of grooming, several collaborators distanced themselves. His philanthropy videos criticized for exploiting people as props without long-term help",
-  "Logan Paul: launched CryptoZoo NFT in 2021, raised millions from fans, game never worked. Coffeezilla exposed him in 2022. Logan sued Coffeezilla then quietly dropped the lawsuit after massive backlash",
-  "Jake Paul: fought 58-year-old Mike Tyson on Netflix in November 2024, both moved at walking pace for 8 rounds, Netflix servers crashed, still got 60 million viewers",
-  "Andrew Tate: arrested in Romania in December 2022 on human trafficking charges, trial still ongoing in 2025 while he continues making content about being a persecuted alpha male",
-  "xQc: admitted in 2023 to losing millions gambling on his own stream, moved to Kick for gambling money, lost millions more on stream while his audience cheered",
-  "Pokimane: announced retirement from streaming in 2024 citing burnout, returned months later, career built on parasocial fans who believe she notices them personally",
-  "KSI: lost boxing rematch against Tommy Fury in 2023 and blamed judges, releases music calling himself multi-hyphenate, neither career is as good as he claims",
-  "Dream: built career hiding his face, face reveal in 2022 disappointed millions, accused of Minecraft speedrun cheating in 2020 never cleanly resolved",
-  "Kai Cenat: organized giveaway in NYC in 2023 that turned into a riot, charged with inciting a riot, broke Twitch records the same year",
-  "Ninja: dropped by Adidas in 2024, cried publicly, announced retirement then returned months later — has done this multiple times",
-  "Trisha Paytas: monetized every personal crisis including breakdowns and relationship collapses into viral content, profited from every public meltdown"
+  { id: "dr_disrespect", name: "Dr Disrespect",   fact: "banned from Twitch in June 2020 and spent 4 years claiming he had no idea why — in June 2024 it emerged he had sent inappropriate messages to a minor, still has millions of YouTube subscribers and never properly addressed it" },
+  { id: "mrbeast",       name: "MrBeast",          fact: "in 2024 a former employee accused him of grooming, several collaborators distanced themselves, his philanthropy videos criticized for exploiting people as props without long-term help" },
+  { id: "logan_paul",    name: "Logan Paul",        fact: "launched CryptoZoo NFT in 2021, raised millions from fans, game never worked, Coffeezilla exposed him in 2022, Logan sued Coffeezilla then quietly dropped the lawsuit after massive backlash" },
+  { id: "jake_paul",     name: "Jake Paul",         fact: "fought 58-year-old Mike Tyson on Netflix in November 2024, both moved at walking pace for 8 rounds, Netflix servers crashed, still got 60 million viewers" },
+  { id: "andrew_tate",   name: "Andrew Tate",       fact: "arrested in Romania in December 2022 on human trafficking charges, trial still ongoing in 2025 while he continues making content about being a persecuted alpha male" },
+  { id: "xqc",           name: "xQc",               fact: "admitted in 2023 to losing millions gambling on his own stream, moved to Kick for gambling money, lost millions more on stream while his audience cheered" },
+  { id: "pokimane",      name: "Pokimane",          fact: "announced retirement from streaming in 2024 citing burnout, returned months later, career built on parasocial fans who believe she notices them personally" },
+  { id: "ksi",           name: "KSI",               fact: "lost boxing rematch against Tommy Fury in 2023 and blamed judges, releases music calling himself multi-hyphenate, neither career is as good as he claims" },
+  { id: "dream",         name: "Dream",             fact: "built career hiding his face, face reveal in 2022 disappointed millions, accused of Minecraft speedrun cheating in 2020 never cleanly resolved" },
+  { id: "kai_cenat",     name: "Kai Cenat",         fact: "organized giveaway in NYC in 2023 that turned into a riot, charged with inciting a riot, broke Twitch records the same year" },
+  { id: "ninja",         name: "Ninja",             fact: "dropped by Adidas in 2024, cried publicly, announced retirement then returned months later — has done this multiple times" },
+  { id: "trisha_paytas", name: "Trisha Paytas",     fact: "monetized every personal crisis including breakdowns and relationship collapses into viral content, profited from every public meltdown" },
 ];
 
 function pickRandom(arr) {
@@ -84,8 +83,7 @@ function angerLevelFromTotal(total) {
 
 async function getWisdom(amount, lang, seed, type = 'paid') {
   const isRu = lang === 'ru';
-
-  let system, prompt;
+  let system, prompt, personaId = null, personaName = null;
 
   if (type === 'free') {
     system = isRu
@@ -98,7 +96,10 @@ async function getWisdom(amount, lang, seed, type = 'paid') {
       : `You are an ancient sage. Give the wisdom of the day — short, bitter, universal. Profanity welcome if it fits. No preamble.`;
     prompt = isRu ? 'Мудрость дня для всех.' : 'Wisdom of the day for everyone.';
   } else {
-    const persona = isRu ? pickRandom(RU_PERSONAS) : pickRandom(EN_PERSONAS);
+    const pool = isRu ? RU_PERSONAS : EN_PERSONAS;
+    const persona = pool[Math.floor(Math.random() * pool.length)];
+    personaId = persona.id;
+    personaName = persona.name;
     const tones = isRu
       ? ['с матом и злостью', 'сухо и беспощадно', 'с иронией и презрением', 'издевательски спокойно']
       : ['with profanity and rage', 'dry and merciless', 'with cold irony', 'mockingly calm'];
@@ -113,8 +114,8 @@ async function getWisdom(amount, lang, seed, type = 'paid') {
       : `You are an ancient bitter sage. Right now you are ${angerDesc}. Speak ${tone}. Every wisdom is unique. Use ONLY the real fact from context. No preamble. 1-2 sentences. Seed: ${seed}`;
 
     prompt = isRu
-      ? `Пользователь пожертвовал ${amount.toFixed(1)} USDT.\n\nФакт: ${persona}\n\nПроведи параллель. 1-2 предложения. Без вступлений.`
-      : `The user donated ${amount.toFixed(1)} USDT.\n\nFact: ${persona}\n\nDraw parallel. 1-2 sentences. No intro.`;
+      ? `Пользователь пожертвовал ${amount.toFixed(1)} USDT.\n\nФакт о ${persona.name}: ${persona.fact}\n\nПроведи параллель между жизнью ${persona.name} и донатером. 1-2 предложения. Без вступлений.`
+      : `The user donated ${amount.toFixed(1)} USDT.\n\nFact about ${persona.name}: ${persona.fact}\n\nDraw parallel between ${persona.name}'s life and the donor. 1-2 sentences. No intro.`;
   }
 
   const aiRes = await fetch('https://api.anthropic.com/v1/messages', {
@@ -128,7 +129,8 @@ async function getWisdom(amount, lang, seed, type = 'paid') {
     })
   });
   const ai = await aiRes.json();
-  return ai.content?.[0]?.text || null;
+  const text = ai.content?.[0]?.text || null;
+  return { text, personaId, personaName };
 }
 
 async function getAudio(text) {
@@ -144,23 +146,34 @@ async function getAudio(text) {
   } catch(e) { console.log('[TTS] exception:', e.message); return null; }
 }
 
-async function postToTelegram(text) {
+const GITHUB_PERSONAS = 'https://raw.githubusercontent.com/userkeeper/sage/main/personas/';
+const MUDRETS_IMG = GITHUB_PERSONAS + 'mudrets.png';
+
+async function postToTelegram(text, photoUrl) {
   if (!TG_TOKEN) return;
   try {
-    await fetch(`https://api.telegram.org/bot${TG_TOKEN}/sendMessage`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ chat_id: TG_CHANNEL, text, parse_mode: 'HTML' })
-    });
+    if (photoUrl) {
+      await fetch(`https://api.telegram.org/bot${TG_TOKEN}/sendPhoto`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ chat_id: TG_CHANNEL, photo: photoUrl, caption: text, parse_mode: 'HTML' })
+      });
+    } else {
+      await fetch(`https://api.telegram.org/bot${TG_TOKEN}/sendMessage`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ chat_id: TG_CHANNEL, text, parse_mode: 'HTML' })
+      });
+    }
   } catch(e) { console.log('[TG] error:', e.message); }
 }
 
 async function sendDailyWisdom() {
   const today = getTodayKey();
   if (dailyWisdomSent.date === today && dailyWisdomSent.sent) return;
-  const wisdom = await getWisdom(0, 'ru', 'daily', 'daily');
-  if (wisdom) {
-    await postToTelegram(`🌑 <b>Мудрость дня</b>\n\n${wisdom}`);
+  const result = await getWisdom(0, 'ru', 'daily', 'daily');
+  if (result.text) {
+    await postToTelegram(`🌑 <b>Мудрость дня</b>\n\n${result.text}`, MUDRETS_IMG);
     dailyWisdomSent.date = today;
     dailyWisdomSent.sent = true;
   }
@@ -181,15 +194,15 @@ app.post('/free-wisdom', async (req, res) => {
     return res.status(429).json({ error: 'daily_limit' });
   }
 
-  const wisdom = await getWisdom(0, lang, '', 'free');
-  if (!wisdom) return res.status(500).json({ error: 'ai_failed' });
+  const result = await getWisdom(0, lang, '', 'free');
+  if (!result.text) return res.status(500).json({ error: 'ai_failed' });
 
   freeByIP.set(ip, { date: today, used: true });
 
   const label = lang === 'ru' ? '🪙 <b>Нищебродская мудрость</b>' : '🪙 <b>Cheapskate wisdom</b>';
-  await postToTelegram(`${label}\n\n${wisdom}`);
+  await postToTelegram(`${label}\n\n${result.text}`, MUDRETS_IMG);
 
-  res.json({ wisdom, free: true });
+  res.json({ wisdom: result.text, free: true });
 });
 
 app.post('/wisdom', async (req, res) => {
@@ -202,13 +215,15 @@ app.post('/wisdom', async (req, res) => {
   if (txid === process.env.TEST_PASSWORD) {
     const anger = getAngerLevel(ip, 1);
     const angerLevel = angerLevelFromTotal(anger);
-    const wisdom = await getWisdom(1.0, lang, seed, 'paid');
-    if (!wisdom) return res.status(500).json({ error: 'ai_failed' });
-    const audio = await getAudio(wisdom);
+    const result = await getWisdom(1.0, lang, seed, 'paid');
+    if (!result.text) return res.status(500).json({ error: 'ai_failed' });
+    const audio = await getAudio(result.text);
     addAnger(ip, 1);
     const emoji = ['😤', '😠', '🔥', '💀', '☠️'][angerLevel - 1];
-    await postToTelegram(`${emoji} <b>Мудрость мудреца</b>\n\n${wisdom}\n\n<i>— пожертвование: 1 USDT</i>`);
-    return res.json({ wisdom, amount: 1.0, audio, angerLevel });
+    const personaLine = result.personaName ? ` · ${result.personaName}` : '';
+    const photoUrl = result.personaId ? GITHUB_PERSONAS + result.personaId + '.png' : MUDRETS_IMG;
+    await postToTelegram(`${emoji} <b>Мудрость мудреца${personaLine}</b>\n\n${result.text}\n\n<i>— пожертвование: 1 USDT</i>`, photoUrl);
+    return res.json({ wisdom: result.text, amount: 1.0, audio, angerLevel, personaId: result.personaId, personaName: result.personaName });
   }
 
   if (usedTxids.has(txid)) return res.status(400).json({ error: 'already_used' });
@@ -229,14 +244,16 @@ app.post('/wisdom', async (req, res) => {
 
     const angerTotal = getAngerLevel(ip, amount);
     const angerLevel = angerLevelFromTotal(angerTotal);
-    const wisdom = await getWisdom(amount, lang, seed, 'paid');
-    if (!wisdom) return res.status(500).json({ error: 'ai_failed' });
-    const audio = await getAudio(wisdom);
+    const result = await getWisdom(amount, lang, seed, 'paid');
+    if (!result.text) return res.status(500).json({ error: 'ai_failed' });
+    const audio = await getAudio(result.text);
     usedTxids.add(txid);
     addAnger(ip, amount);
     const emoji = ['😤', '😠', '🔥', '💀', '☠️'][angerLevel - 1];
-    await postToTelegram(`${emoji} <b>Мудрость мудреца</b>\n\n${wisdom}\n\n<i>— пожертвование: ${amount.toFixed(1)} USDT</i>`);
-    res.json({ wisdom, amount, audio, angerLevel });
+    const personaLine = result.personaName ? ` · ${result.personaName}` : '';
+    const photoUrl = result.personaId ? GITHUB_PERSONAS + result.personaId + '.png' : MUDRETS_IMG;
+    await postToTelegram(`${emoji} <b>Мудрость мудреца${personaLine}</b>\n\n${result.text}\n\n<i>— пожертвование: ${amount.toFixed(1)} USDT</i>`, photoUrl);
+    res.json({ wisdom: result.text, amount, audio, angerLevel, personaId: result.personaId, personaName: result.personaName });
   } catch(e) {
     console.error(e);
     res.status(500).json({ error: 'server_error' });
