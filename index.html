@@ -94,22 +94,25 @@
   .tg-link { display: block; text-align: center; font-family:'VT323',monospace; font-size:16px; color:#5a7a5a; margin-top: 16px; text-decoration: none; }
   .tg-link:hover { color: #7ab07a; }
   .footer { margin-top:40px; font-family:'VT323',monospace; font-size:14px; color:#3a3020; text-align:center; z-index:1; }
-  .wisdom-video-modal { display:none; position:fixed; inset:0; z-index:999; background:rgba(0,0,0,0.95); align-items:center; justify-content:center; flex-direction:column; gap:12px; }
+  .wisdom-video-modal { display:none; position:fixed; inset:0; z-index:999; background:rgba(0,0,0,0.95); align-items:center; justify-content:center; flex-direction:column; gap:10px; padding:16px 0; }
   .wisdom-video-modal.active { display:flex; }
   .wv-frame {
-    position:relative; width:320px; height:569px;
+    position:relative; width:320px;
     border:3px solid #c8a84b; box-shadow:0 0 40px rgba(200,168,75,0.25);
-    background:#08080f; display:flex; flex-direction:column; overflow:hidden;
+    background:#08080f; display:flex; flex-direction:column;
+    max-height: calc(100vh - 80px); overflow:hidden;
   }
-  .wv-portrait { width:320px; height:320px; object-fit:cover; image-rendering:pixelated; flex-shrink:0; }
+  .wv-portrait { width:320px; height:240px; object-fit:cover; object-position:top; image-rendering:pixelated; flex-shrink:0; }
   .wv-scanlines { position:absolute; inset:0; background:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,0,0,0.1) 3px,rgba(0,0,0,0.1) 4px); pointer-events:none; z-index:2; }
-  .wv-bottom { display:flex; flex-direction:column; flex:1; padding:10px 14px 12px; gap:8px; }
-  .wv-name { font-size:8px; color:#c8a84b; letter-spacing:2px; font-family:'Press Start 2P',monospace; text-align:center; }
-  .wv-equalizer { display:flex; align-items:flex-end; justify-content:center; gap:4px; height:32px; flex-shrink:0; }
-  .wv-bar { width:7px; background:#c8a84b; min-height:3px; border-radius:1px 1px 0 0; transition:height 0.08s; }
-  .wv-subtitles { font-family:'VT323',monospace; font-size:17px; color:#e8c878; line-height:1.5; text-align:center; flex:1; display:flex; align-items:center; justify-content:center; }
-  .wv-footer { font-family:'VT323',monospace; font-size:12px; color:#3a3020; text-align:center; }
-  .wv-actions { display:flex; gap:8px; width:320px; }
+  .wv-bottom { display:flex; flex-direction:column; padding:8px 14px 10px; gap:6px; overflow:hidden; }
+  .wv-name { font-size:7px; color:#c8a84b; letter-spacing:2px; font-family:'Press Start 2P',monospace; text-align:center; flex-shrink:0; }
+  .wv-equalizer { display:flex; align-items:flex-end; justify-content:center; gap:3px; height:28px; flex-shrink:0; }
+  .wv-bar { width:6px; background:#c8a84b; min-height:3px; border-radius:1px 1px 0 0; transition:height 0.09s ease; }
+  .wv-subtitles { font-family:'VT323',monospace; font-size:16px; color:#e8c878; line-height:1.45; text-align:center; overflow-y:auto; max-height:160px; padding:0 4px; }
+  .wv-subtitles::-webkit-scrollbar { width:3px; }
+  .wv-subtitles::-webkit-scrollbar-thumb { background:#3a3020; }
+  .wv-footer { font-family:'VT323',monospace; font-size:11px; color:#2a2010; text-align:center; flex-shrink:0; }
+  .wv-actions { display:flex; gap:8px; width:320px; flex-shrink:0; }
   .wv-close { flex:1; background:#0a0a0a; border:2px solid #5a5040; color:#7a7060; font-family:'Press Start 2P',monospace; font-size:7px; padding:10px; cursor:pointer; }
   .wv-close:hover { border-color:#c8a84b; color:#c8a84b; }
   .wv-save { flex:1; background:#c8a84b; border:none; color:#0a0a0a; font-family:'Press Start 2P',monospace; font-size:7px; padding:10px; cursor:pointer; box-shadow:3px 3px 0 #6a5820; }
@@ -348,13 +351,14 @@ function openWisdomModal(portraitUrl, name, wisdom, audioBase64) {
 
   if (audioBase64) {
     currentAudioObj = new Audio('data:audio/mpeg;base64,' + audioBase64);
-    currentAudioObj.onplay = () => { mouthActive = true; animateMouth(); };
     currentAudioObj.onended = () => {
       mouthActive = false;
       resetBars();
       document.getElementById('wvSaveBtn').disabled = false;
     };
-    currentAudioObj.play();
+    mouthActive = true;
+    animateMouth();
+    currentAudioObj.play().catch(e => console.log('audio play error', e));
   } else {
     mouthActive = false;
   }

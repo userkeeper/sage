@@ -168,24 +168,26 @@ async function generateAndSendVideo(wisdomText, personaId, personaName, audioBas
     const portraitPath = path.join(tmpDir, 'portrait.png');
     await downloadImage(personaImgUrl, portraitPath);
 
-    // Generate 30 frames (1 second static + animated eq bars)
-    const fps = 30;
-    const audioDuration = audioBase64 ? Math.ceil(wisdomText.length * 0.038) + 2 : 5;
+    const fps = 15;
+    const audioDuration = audioBase64 ? Math.ceil(wisdomText.length * 0.042) + 2 : 5;
     const totalFrames = fps * audioDuration;
     const framesDir = path.join(tmpDir, 'frames');
     fs.mkdirSync(framesDir);
 
-    // Render frames with animated equalizer
+    const scriptPath = path.join(__dirname, 'render_frame.py');
+
+    // Render unique frames (15fps * duration) with animated eq bars
     for (let f = 0; f < totalFrames; f++) {
       const bars = Array.from({length: 20}, () => Math.floor(Math.random() * 50) + 8);
-      const frameData = JSON.stringify({
+      const frameData = {
         persona_path: portraitPath,
         wisdom_text: wisdomText,
         persona_name: personaName || 'Мудрец Пустоты',
         bar_heights: bars,
         output_path: path.join(framesDir, `frame${String(f).padStart(5,'0')}.png`)
-      });
-      execSync(`python3 /app/render_frame.py '${frameData.replace(/'/g, '"')}'`);
+      };
+      const frameJson = JSON.stringify(frameData).replace(/'/g, "\\'");
+      execSync(`python3 "${scriptPath}" '${frameJson}'`, { timeout: 30000 });
     }
 
     // Audio file
@@ -195,20 +197,19 @@ async function generateAndSendVideo(wisdomText, personaId, personaName, audioBas
       fs.writeFileSync(audioPath, Buffer.from(audioBase64, 'base64'));
     }
 
-    // Assemble video with ffmpeg
+    // Assemble video
     const videoPath = path.join(tmpDir, 'wisdom.mp4');
-    const audioArg = audioPath
-      ? `-i ${audioPath} -c:a aac -shortest`
-      : '-an';
-    execSync(
-      `ffmpeg -y -framerate ${fps} -i ${framesDir}/frame%05d.png ${audioPath ? `-i ${audioPath}` : ''} ` +
-      `-c:v libx264 -preset fast -crf 23 -pix_fmt yuv420p ` +
-      `${audioPath ? '-c:a aac -shortest' : '-an'} ` +
-      `${videoPath}`,
-      { timeout: 120000 }
-    );
+    const ffCmd = [
+      `ffmpeg -y -framerate ${fps}`,
+      `-i "${framesDir}/frame%05d.png"`,
+      audioPath ? `-i "${audioPath}"` : '',
+      `-c:v libx264 -preset fast -crf 26 -pix_fmt yuv420p`,
+      audioPath ? '-c:a aac -shortest' : '-an',
+      `"${videoPath}"`
+    ].filter(Boolean).join(' ');
 
-    // Send to video channel
+    execSync(ffCmd, { timeout: 180000 });
+
     await sendVideoToTelegram(videoPath, wisdomText, personaName);
 
   } catch(e) {
